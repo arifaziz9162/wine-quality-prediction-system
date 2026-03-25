@@ -1,0 +1,17 @@
+pandas 
+numpy
+scikit-learn
+matplotlib
+python-box
+pyYaml
+tqdm
+ensure
+joblib
+types-pyYaml
+fastapi
+uvicorn
+setuptools 
+sqlalchemy
+psycopg2-binary
+python-dotenv
+-e .

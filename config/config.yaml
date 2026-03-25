@@ -1,0 +1,7 @@
+artifacts_root: artifacts
+
+data_ingestion: 
+  root_dir: artifacts/data_ingestion
+  source_file: artifacts/data_ingestion/WineQT.csv
+  database_table: wine_data
+  dataset_url: https://raw.githubusercontent.com/arifaziz9162/datasets/refs/heads/main/wine-quality/WineQT.csv

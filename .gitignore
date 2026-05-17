@@ -13,12 +13,15 @@ __pycache__/
 # ML artifacts
 artifacts/
 
+models/
+
 # Logs
 logs/
 *.log
 
 # DVC
 .dvc/cache/
+.dvc/tmp/
 
 # Docker
 *.tar

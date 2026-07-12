@@ -1,24 +1,33 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
-*.py[codz]
+*.py[cod]
 *$py.class
 
 # C extensions
 *.so
 
 # Project Specific
-# ML artifacts
-artifacts/*
+# ML Artifacts
+artifacts/**
+
+# Keep directory structure
+!artifacts/**/
 
 # Keep pipeline status files
 !artifacts/**/status.json
 
-# Keep evaluation outputs
-!artifacts/model_evaluation/*.png
+# Keep evaluation reports
 !artifacts/model_evaluation/metrics.json
+!artifacts/model_evaluation/*.png
 
 # Models
 models/
+
+# MLflow
+mlruns/
+
+# DVC local config
+.dvc/config.local
 
 # DVC
 .dvc/cache/

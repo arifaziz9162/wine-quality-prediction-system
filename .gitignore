@@ -20,9 +20,6 @@ artifacts/**
 !artifacts/model_evaluation/metrics.json
 !artifacts/model_evaluation/*.png
 
-# Models
-models/
-
 # MLflow
 mlruns/
 

@@ -1,0 +1,15 @@
+# Production dependencies first
+-r requirements.txt
+
+# Testing
+pytest==8.3.3
+pytest-cov==5.0.0
+
+# Code Quality
+black==24.8.0
+ruff==0.12.1
+isort==5.13.2
+
+# Jupyter Support
+ipykernel==6.29.5
+jupyter==1.1.1

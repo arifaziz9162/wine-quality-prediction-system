@@ -1,0 +1,43 @@
+# MLOps Tools
+dagshub==0.3.32
+mlflow==2.15.1
+dvc==3.51.2
+pathspec==0.12.1
+
+# Environment
+python-dotenv==1.0.1
+
+# Data Processing
+pandas==2.2.2
+numpy==1.26.4
+
+# Machine Learning
+scikit-learn==1.5.1
+xgboost==2.1.1
+lightgbm==4.5.0
+joblib==1.4.2
+
+# Visualization
+matplotlib==3.9.2
+
+# Utilities
+python-box==7.2.0
+PyYAML==6.0.2
+tqdm==4.66.5
+ensure==1.0.4
+
+# Database
+SQLALchemy==2.0.35
+psycopg2-binary==2.9.9
+
+# Backend API
+fastapi==0.115.0
+uvicorn==0.30.6
+pydantic==2.9.2
+
+# Packaging
+setuptools==75.1.0
+wheel==0.44.0
+
+# Local package
+-e .

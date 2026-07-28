@@ -1,0 +1,152 @@
+[build-system]
+requires = ["setuptools>=82.0.1", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "wine_quality_prediction"
+version = "1.0.0"
+description = "End-to-end ML project for wine quality prediction"
+readme = "README.md"
+requires-python = ">=3.11"
+
+authors = [
+    { name = "Md Arif Aziz", email = "arifaziz0125@gmail.com" }
+]
+
+license = { text = "MIT" }
+
+keywords = [
+    "mlops",
+    "machine-learning",
+    "wine-quality",
+    "dvc",
+    "mlflow",
+    "fastapi",
+    "docker",
+    "aws"
+]
+
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Operating System :: OS Independent",
+    "License :: OSI Approved :: MIT License"
+]
+
+[project.urls]
+Homepage = "https://github.com/arifaziz9162/Wine-Quality-Prediction"
+Repository = "https://github.com/arifaziz9162/Wine-Quality-Prediction"
+Issues = "https://github.com/arifaziz9162/Wine-Quality-Prediction/issues"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["wine_quality_prediction*"]
+
+# -------------
+# Black
+# -------------
+
+[tool.black]
+line-length = 88
+target-version = ["py311"]
+
+exclude = '''
+/(
+    \.git
+  | __pycache__
+  | artifacts
+  | notebooks
+  | mlruns
+  | logs
+  | \.pytest_cache
+  | .*\.egg-info
+)/
+'''
+
+# -------------
+# Ruff
+# -------------
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+exclude = [
+    ".git",
+    ".venv",
+    "__pycache__",
+    "artifacts",
+    "notebooks",
+    "mlruns",
+    "logs",
+    "*.egg-info"
+]
+
+[tool.ruff.lint]
+select = [
+    "E",
+    "F",
+    "I",
+    "W",
+    "UP",
+    "B"
+]
+
+ignore = [
+    "E501"
+]
+
+# -------------
+# Isort
+# -------------
+
+[tool.isort]
+profile = "black"
+line_length = 88
+py_version = 311
+skip = [
+    "artifacts",
+    "notebooks",
+    "mlruns",
+    "logs"
+]
+
+# -------------
+# Pytest
+# -------------
+
+[tool.pytest.ini_options]
+testpaths = [
+  "backend/tests"
+]
+
+python_files = [
+  "test_*.py"
+]
+
+python_functions = [
+  "test_*"
+]
+
+addopts = "-ra -q"
+
+# -------------
+# Coverage
+# -------------
+
+[tool.coverage.run]
+
+source = [
+  "src"
+]
+
+omit = [
+  "*/__init__.py"
+]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true

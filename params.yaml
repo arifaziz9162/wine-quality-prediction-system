@@ -1,0 +1,5 @@
+SVR:
+  kernel: rbf
+  gamma: scale
+  epsilon: 0.1
+  C: 1

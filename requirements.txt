@@ -25,6 +25,7 @@ python-box==7.2.0
 PyYAML==6.0.2
 tqdm==4.66.5
 ensure==1.0.4
+kaggle==2.2.4
 
 # Database
 SQLALchemy==2.0.35

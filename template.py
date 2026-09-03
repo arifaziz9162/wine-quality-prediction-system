@@ -9,24 +9,29 @@ project_name = "wine_quality_prediction"
 # Folders inside src
 src_folders = [
     f"src/{project_name}",
-    f"src/{project_name}/components",
-    f"src/{project_name}/utils",
     f"src/{project_name}/config",
-    f"src/{project_name}/pipeline",
-    f"src/{project_name}/entity",
     f"src/{project_name}/constants",
+    f"src/{project_name}/entity",
     f"src/{project_name}/logger",
+    f"src/{project_name}/utils",
     f"src/{project_name}/database",
+    f"src/{project_name}/components",
+    f"src/{project_name}/pipeline",
 ]
 
 # Folders outside src
 other_folders = [
-    "config",
     "notebooks",
-    "backend",
-    "frontend",
+    "config",
     "reports",
     "reports/figures",
+    "tests",
+    "tests/unit",
+    "tests/integration",
+    "airflow",
+    "dags",
+    "backend",
+    "frontend",
     "docs",
     "docs/images",
 ]
@@ -36,8 +41,6 @@ list_of_files = [f"{folder}/__init__.py" for folder in src_folders]
 
 # Extra files
 extra_files = [
-    # utils
-    f"src/{project_name}/utils/common.py",
     # config
     f"src/{project_name}/config/configuration.py",
     # entity
@@ -45,6 +48,8 @@ extra_files = [
     # logger
     f"src/{project_name}/logger/logger_config.py",
     f"src/{project_name}/logger/exception.py",
+    # utils
+    f"src/{project_name}/utils/common.py",
     # database
     f"src/{project_name}/database/connection.py",
     f"src/{project_name}/database/operations.py",
@@ -64,26 +69,35 @@ extra_files = [
     f"src/{project_name}/pipeline/stage_06_model_registry.py",
     # config files
     "config/config.yaml",
-    "params.yaml",
     "schema.yaml",
+    "params.yaml",
     # root files
-    "main.py",
     "requirements-dev.txt",
     "requirements.txt",
     "pyproject.toml",
+    "main.py",
     "dvc.yaml",
     ".dvcignore",
+    "docker-compose.airflow.yml",
     "docker-compose.dev.yml",
     "docker-compose.prod.yml",
     # notebooks
     "notebooks/Experiments.ipynb",
-    "notebooks/01_data_ingestion.ipynb",
-    "notebooks/02_data_validation.ipynb",
-    "notebooks/03_data_transformation.ipynb",
-    "notebooks/04_model_trainer.ipynb",
-    "notebooks/05_model_evaluation.ipynb",
     # reports
-    "reports/evalution_report.ipynb",
+    "reports/evaluation_report.ipynb",
+    # tests
+    "tests/unit/test_data_ingestion.py",
+    "tests/unit/test_data_validation.py",
+    "tests/unit/test_data_transformation.py",
+    "tests/unit/test_model_trainer.py",
+    "tests/unit/test_model_evaluation.py",
+    "tests/unit/test_model_registry.py",
+    "tests/integration/test_pipeline_e2e.py",
+    # airflow
+    "airflow/Dockerfile",
+    "airflow/requirements-airflow.txt",
+    "airflow/README.md",
+    "airflow/dags/wine_quality_dag.py",
     # backend
     "backend/__init__.py",
     "backend/app.py",

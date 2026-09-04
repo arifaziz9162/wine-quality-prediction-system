@@ -9,6 +9,27 @@ description = "End-to-end ML project for wine quality prediction"
 readme = "README.md"
 requires-python = ">=3.11"
 
+dependencies = [
+  "pandas",
+  "numpy",
+  "python-dotenv",
+  "kaggle",
+  "scikit-learn",
+  "mlflow",
+  "dvc",
+  "dagshub",
+  "xgboost",
+  "lightgbm",
+  "optuna",
+  "alembic",
+  "sqlalchemy",
+  "psycopg2-binary",
+  "PyYAML",
+  "python-box",
+  "ensure",
+  "joblib"
+]
+
 authors = [
     { name = "Md Arif Aziz", email = "arifaziz0125@gmail.com" }
 ]
@@ -100,37 +121,13 @@ ignore = [
 ]
 
 # -------------
-# Isort
-# -------------
-
-[tool.isort]
-profile = "black"
-line_length = 88
-py_version = 311
-skip = [
-    "artifacts",
-    "notebooks",
-    "mlruns",
-    "logs"
-]
-
-# -------------
 # Pytest
 # -------------
 
 [tool.pytest.ini_options]
-testpaths = [
-  "backend/tests"
-]
-
-python_files = [
-  "test_*.py"
-]
-
-python_functions = [
-  "test_*"
-]
-
+testpaths = ["tests", "backend/tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
 addopts = "-ra -q"
 
 # -------------
@@ -138,15 +135,8 @@ addopts = "-ra -q"
 # -------------
 
 [tool.coverage.run]
-
-source = [
-  "src"
-]
-
-omit = [
-  "*/__init__.py"
-]
-
+source = ["src, "backend"]
+omit = ["*/__init__.py"]
 [tool.coverage.report]
 show_missing = true
 skip_covered = true

@@ -135,7 +135,7 @@ addopts = "-ra -q"
 # -------------
 
 [tool.coverage.run]
-source = ["src, "backend"]
+source = ["src", "backend"]
 omit = ["*/__init__.py"]
 [tool.coverage.report]
 show_missing = true

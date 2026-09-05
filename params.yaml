@@ -1,5 +1,40 @@
-SVR:
-  kernel: rbf
-  gamma: scale
-  epsilon: 0.1
-  C: 1
+TRAINING:
+  test_size: 0.2
+  random_state: 42
+
+  development:
+    n_jobs: 4
+    cv: 3
+
+  production:
+    n_jobs: 2
+    cv: 5
+
+
+BAYESIAN_OPTIMIZATION:
+  n_trials: 40
+  direction: maximize
+  scoring: r2
+
+
+RANDOM_FOREST:
+  n_estimators:
+    low: 50
+    high: 300
+
+  max_depth:
+    low: 3
+    high: 15
+
+  min_samples_split:
+    low: 2
+    high: 20
+
+  min_samples_leaf:
+    low: 1
+    high: 8
+
+  max_features:
+    choices:
+      - sqrt
+      - log2

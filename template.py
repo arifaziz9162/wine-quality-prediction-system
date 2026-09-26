@@ -23,13 +23,10 @@ src_folders = [
 other_folders = [
     "notebooks",
     "config",
-    "reports",
-    "reports/figures",
     "tests",
     "tests/unit",
     "tests/integration",
     "airflow",
-    "dags",
     "backend",
     "frontend",
     "docs",
@@ -82,9 +79,8 @@ extra_files = [
     "docker-compose.dev.yml",
     "docker-compose.prod.yml",
     # notebooks
+    "notebooks/EDA.ipynb",
     "notebooks/Experiments.ipynb",
-    # reports
-    "reports/evaluation_report.ipynb",
     # tests
     "tests/unit/test_data_ingestion.py",
     "tests/unit/test_data_validation.py",
@@ -115,6 +111,7 @@ extra_files = [
     "backend/schemas/request_schema.py",
     "backend/schemas/response_schema.py",
     "backend/schemas/health_schema.py",
+    "backend/tests/__init__.py",
     "backend/tests/test_prediction.py",
     "backend/Dockerfile.dev",
     "backend/Dockerfile",

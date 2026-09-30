@@ -36,6 +36,7 @@ mlruns/
 # Environment files
 .env
 .env.*
+k8s/base/secret.env
 
 # Local databases
 *.db

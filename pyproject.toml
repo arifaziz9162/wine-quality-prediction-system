@@ -42,7 +42,8 @@ keywords = [
     "wine-quality",
     "dvc",
     "mlflow",
-    "fastapi",
+    "bentoml",
+    "kubernetes",
     "docker",
     "aws"
 ]
@@ -125,7 +126,7 @@ ignore = [
 # -------------
 
 [tool.pytest.ini_options]
-testpaths = ["tests", "backend/tests"]
+testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_functions = ["test_*"]
 addopts = "-ra -q"
@@ -135,7 +136,7 @@ addopts = "-ra -q"
 # -------------
 
 [tool.coverage.run]
-source = ["src", "backend"]
+source = ["src", "serving"]
 omit = ["*/__init__.py"]
 [tool.coverage.report]
 show_missing = true

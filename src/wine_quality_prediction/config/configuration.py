@@ -103,7 +103,7 @@ class ConfigurationManager:
         return ModelPackagingConfig(
             root_dir=Path(config.root_dir),
             mlflow_model_name=config.mlflow_model_name,
-            mlflow_stage_name=config.mlflow_stage_name,
+            mlflow_model_stage=config.mlflow_model_stage,
             bento_model_name=config.bento_model_name,
             info_file=Path(config.info_file),
             status_file=Path(config.status_file),

@@ -47,3 +47,4 @@ model_packaging:
   mlflow_model_stage: production
   bento_model_name: wine_data_model
   info_file: artifacts/model_packaging/status.json
+  status_file: artifacts/model_packaging/status.json

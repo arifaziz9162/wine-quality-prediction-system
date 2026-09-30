@@ -122,3 +122,4 @@ class DatabaseOperations:
         except Exception as e:
             logger.error(f"Failed to close database connection: {e}", exc_info=True)
             raise DatabaseError("Failed to close database connection") from e
+        

@@ -62,7 +62,7 @@ class ModelRegistryConfig:
 class ModelPackagingConfig:
     root_dir: Path
     mlflow_model_name: str
-    mlflow_stage_name: str
+    mlflow_model_stage: str
     bento_model_name: str
     info_file: Path
     status_file: Path

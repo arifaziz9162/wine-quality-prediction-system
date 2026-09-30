@@ -34,11 +34,6 @@ alembic==1.18.5
 SQLAlchemy==2.0.35
 psycopg2-binary==2.9.9
 
-# Backend API
-fastapi==0.115.0
-uvicorn==0.30.6
-pydantic==2.9.2
-
 # Packaging
 setuptools==75.1.0
 wheel==0.44.0

@@ -40,3 +40,10 @@ model_registry:
   model_name: WineQualityModel
   production_threshold: 0.45
   status_file: artifacts/model_registry/status.json
+
+model_packaging:
+  root_dir: artifacts/model_packaging
+  mlflow_model_name: WineQualityModel
+  mlflow_model_stage: production
+  bento_model_name: wine_data_model
+  info_file: artifacts/model_packaging/status.json

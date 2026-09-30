@@ -9,9 +9,10 @@ from wine_quality_prediction.entity import (
     DataIngestionConfig,
     DataTransformationConfig,
     DataValidationConfig,
-    ModelTrainerConfig,
     ModelEvaluationConfig,
+    ModelPackagingConfig,
     ModelRegistryConfig,
+    ModelTrainerConfig,
 )
 from wine_quality_prediction.utils import create_directories, read_yaml
 
@@ -93,5 +94,17 @@ class ConfigurationManager:
             metrics_file=Path(config.metrics_file),
             model_name=config.model_name,
             production_threshold=float(config.production_threshold),
+            status_file=Path(config.status_file),
+        )
+
+    def get_model_packaging_config(self) -> ModelPackagingConfig:
+        config = self.config.model_packaging
+        create_directories([config.root_dir])
+        return ModelPackagingConfig(
+            root_dir=Path(config.root_dir),
+            mlflow_model_name=config.mlflow_model_name,
+            mlflow_stage_name=config.mlflow_stage_name,
+            bento_model_name=config.bento_model_name,
+            info_file=Path(config.info_file),
             status_file=Path(config.status_file),
         )

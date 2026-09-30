@@ -40,6 +40,12 @@ class ModelRegistryError(WineQualityBaseError):
     pass
 
 
+class ModelPackagingError(WineQualityBaseError):
+    """Raised when packaging the model for serving fails."""
+
+    pass
+
+
 class ModelInferenceError(WineQualityBaseError):
     """Raised when prediction/inference fails."""
 

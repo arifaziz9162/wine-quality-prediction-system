@@ -1,14 +1,14 @@
 from .exception import (
-    WineQualityBaseError,
+    DatabaseError,
     DataIngestionError,
-    DataValidationError,
     DataTransformationError,
-    ModelTrainingError,
+    DataValidationError,
     ModelEvaluationError,
-    ModelRegistryError,
     ModelInferenceError,
-    DatabaseError
-
+    ModelPackagingError,
+    ModelRegistryError,
+    ModelTrainingError,
+    WineQualityBaseError,
 )
 from .logger_config import get_logger
 
@@ -20,7 +20,8 @@ __all__ = [
     "ModelTrainingError",
     "ModelEvaluationError",
     "ModelRegistryError",
+    "ModelPackagingError",
     "ModelInferenceError",
     "DatabaseError",
-    "get_logger"
+    "get_logger",
 ]

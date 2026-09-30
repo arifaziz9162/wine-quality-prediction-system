@@ -56,3 +56,13 @@ class ModelRegistryConfig:
     model_name: str
     production_threshold: float
     status_file: Path
+
+
+@dataclass(frozen=True)
+class ModelPackagingConfig:
+    root_dir: Path
+    mlflow_model_name: str
+    mlflow_stage_name: str
+    bento_model_name: str
+    info_file: Path
+    status_file: Path

@@ -3,6 +3,7 @@ from .config_entity import (
     DataTransformationConfig,
     DataValidationConfig,
     ModelEvaluationConfig,
+    ModelPackagingConfig,
     ModelRegistryConfig,
     ModelTrainerConfig,
 )
@@ -14,4 +15,5 @@ __all__ = [
     "ModelTrainerConfig",
     "ModelEvaluationConfig",
     "ModelRegistryConfig",
+    "ModelPackagingConfig",
 ]

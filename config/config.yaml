@@ -46,5 +46,5 @@ model_packaging:
   mlflow_model_name: WineQualityModel
   mlflow_model_stage: production
   bento_model_name: wine_data_model
-  info_file: artifacts/model_packaging/status.json
+  info_file: artifacts/model_packaging/info.json
   status_file: artifacts/model_packaging/status.json

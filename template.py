@@ -118,8 +118,8 @@ extra_files = [
     f"src/{project_name}/config/configuration.py",
 
     "config/config.yaml",
-    "schema.yaml",
-    "params.yaml",
+    "config/schema.yaml",
+    "config/params.yaml",
 
 
     # -------------------------------------------------------------------------
@@ -240,7 +240,6 @@ extra_files = [
     "serving/service.py",
     "serving/config.py",
     "serving/constants.py",
-    "serving/Dockerfile.template",
     "serving/requirements.txt",
 
     "serving/schemas/request_schema.py",

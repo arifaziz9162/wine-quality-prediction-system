@@ -188,6 +188,7 @@ extra_files = [
     "main.py",
     "dvc.yaml",
     ".dvcignore",
+    "bentofile.yaml",
     "Makefile",
 
     "docker-compose.airflow.yml",

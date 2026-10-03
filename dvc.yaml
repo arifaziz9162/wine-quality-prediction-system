@@ -1,0 +1,129 @@
+stages:
+
+  data_ingestion:
+    cmd: python -m src.wine_quality_prediction.pipeline.stage_01_data_ingestion
+
+    deps:
+      - src/wine_quality_prediction/components/data_ingestion.py
+      - src/wine_quality_prediction/pipeline/stage_01_data_ingestion.py
+      - src/wine_quality_prediction/config/configuration.py
+      - src/wine_quality_prediction/entity/config_entity.py
+      - src/wine_quality_prediction/utils/common.py
+      - config/config.yaml
+
+    outs:
+      - artifacts/data_ingestion/WineQT.csv
+      - artifacts/data_ingestion/status.json
+
+  data_validation:
+    cmd: python -m src.wine_quality_prediction.pipeline.stage_02_data_validation
+
+    deps:
+      - src/wine_quality_prediction/components/data_validation.py
+      - src/wine_quality_prediction/pipeline/stage_02_data_validation.py
+      - src/wine_quality_prediction/config/configuration.py
+      - src/wine_quality_prediction/entity/config_entity.py
+      - src/wine_quality_prediction/utils/common.py
+      - config/config.yaml
+      - config/schema.yaml
+
+    outs:
+      - artifacts/data_validation/status.json
+
+  data_transformation:
+    cmd: python -m src.wine_quality_prediction.pipeline.stage_03_data_transformation
+
+    deps:
+      - src/wine_quality_prediction/components/data_transformation.py
+      - src/wine_quality_prediction/pipeline/stage_03_data_transformation.py
+      - src/wine_quality_prediction/config/configuration.py
+      - src/wine_quality_prediction/entity/config_entity.py
+      - src/wine_quality_prediction/utils/common.py
+      - config/config.yaml
+      - artifacts/data_ingestion/WineQT.csv
+      - artifacts/data_validation/status.json
+
+    params:
+      - config/params.yaml:
+        - TRAINING
+
+    outs:
+      - artifacts/data_transformation/train.csv
+      - artifacts/data_transformation/test.csv
+      - artifacts/data_transformation/status.json
+
+  model_trainer:
+    cmd: python -m src.wine_quality_prediction.pipeline.stage_04_model_trainer
+
+    deps:
+      - src/wine_quality_prediction/components/model_trainer.py
+      - src/wine_quality_prediction/pipeline/stage_04_model_trainer.py
+      - src/wine_quality_prediction/config/configuration.py
+      - src/wine_quality_prediction/entity/config_entity.py
+      - src/wine_quality_prediction/utils/common.py
+      - config/config.yaml
+      - config/schema.yaml
+      - artifacts/data_transformation/train.csv
+
+    params:
+      - config/params.yaml:
+        - TRAINING
+        - BAYESIAN_OPTIMIZATION
+        - XGBOOST
+
+    outs:
+      - artifacts/model_trainer/model.joblib
+      - artifacts/model_trainer/status.json
+
+  model_evaluation:
+    cmd: python -m src.wine_quality_prediction.pipeline.stage_05_model_evaluation
+
+    deps:
+      - src/wine_quality_prediction/components/model_evaluation.py
+      - src/wine_quality_prediction/pipeline/stage_05_model_evaluation.py
+      - src/wine_quality_prediction/config/configuration.py
+      - src/wine_quality_prediction/entity/config_entity.py
+      - src/wine_quality_prediction/utils/common.py
+      - config/config.yaml
+      - config/schema.yaml
+      - artifacts/data_transformation/test.csv
+      - artifacts/model_trainer/model.joblib
+
+    metrics:
+      - artifacts/model_evaluation/metrics.json
+
+    outs:
+      - artifacts/model_evaluation/status.json
+
+  model_registry:
+    cmd: python -m src.wine_quality_prediction.pipeline.stage_06_model_registry
+
+    deps:
+      - src/wine_quality_prediction/components/model_registry.py
+      - src/wine_quality_prediction/pipeline/stage_06_model_registry.py
+      - src/wine_quality_prediction/config/configuration.py
+      - src/wine_quality_prediction/entity/config_entity.py
+      - src/wine_quality_prediction/utils/common.py
+      - config/config.yaml
+      - artifacts/model_trainer/model.joblib
+      - artifacts/data_transformation/test.csv
+      - artifacts/model_evaluation/metrics.json
+
+    outs:
+      - artifacts/model_registry/status.json
+
+  model_packaging:
+    cmd: python -m src.wine_quality_prediction.pipeline.stage_07_model_packaging
+
+    deps:
+      - src/wine_quality_prediction/components/model_packaging.py
+      - src/wine_quality_prediction/pipeline/stage_07_model_packaging.py
+      - src/wine_quality_prediction/config/configuration.py
+      - src/wine_quality_prediction/entity/config_entity.py
+      - src/wine_quality_prediction/utils/common.py
+      - config/config.yaml
+      - artifacts/model_registry/status.json
+
+    outs:
+      - artifacts/model_packaging/info.json
+      - artifacts/model_packaging/status.json

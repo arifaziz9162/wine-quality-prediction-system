@@ -1,0 +1,17 @@
+# Database Migrations
+
+This directory contains the database migrations for the Wine Quality Prediction project.
+
+Alembic is used to manage changes to the PostgreSQL database schema.
+
+## Structure
+
+```text
+migrations
+├── README
+├── env.py
+├── script.py.mako
+└── versions
+    ├── 1b3d5693a1e7_create_wine_data_table.py
+    └── 92270fda58d9_create_predictions_table.py
+

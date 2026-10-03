@@ -1,0 +1,351 @@
+schema: '2.0'
+stages:
+  data_ingestion:
+    cmd: python -m src.wine_quality_prediction.pipeline.stage_01_data_ingestion
+    deps:
+    - path: config/config.yaml
+      hash: md5
+      md5: d701975bf4048e83304714e369296204
+      size: 1778
+    - path: src/wine_quality_prediction/components/data_ingestion.py
+      hash: md5
+      md5: b80e17338ac93b90f761bcc9fe3dbe3f
+      size: 4744
+    - path: src/wine_quality_prediction/config/configuration.py
+      hash: md5
+      md5: 63748c23f4edf67b4b9c958cde4e2ad2
+      size: 4149
+    - path: src/wine_quality_prediction/entity/config_entity.py
+      hash: md5
+      md5: 52a6c5ca61981dbbfa5848eb8012b8b4
+      size: 1264
+    - path: src/wine_quality_prediction/pipeline/stage_01_data_ingestion.py
+      hash: md5
+      md5: ee5550996491a1b8a1f2f44b6a2937bf
+      size: 998
+    - path: src/wine_quality_prediction/utils/common.py
+      hash: md5
+      md5: fc42893b00029b34abe99c74e3787c96
+      size: 4909
+    outs:
+    - path: artifacts/data_ingestion/WineQT.csv
+      hash: md5
+      md5: 6a883fd98624e18c0b7ce251f4fab4fb
+      size: 100951
+    - path: artifacts/data_ingestion/status.json
+      hash: md5
+      md5: b12fa3057e331c59b520e9382bc34e57
+      size: 93
+  data_validation:
+    cmd: python -m src.wine_quality_prediction.pipeline.stage_02_data_validation
+    deps:
+    - path: config/config.yaml
+      hash: md5
+      md5: d701975bf4048e83304714e369296204
+      size: 1778
+    - path: config/schema.yaml
+      hash: md5
+      md5: a38864e0b1661ee1d8af9dd3c09aaa66
+      size: 317
+    - path: src/wine_quality_prediction/components/data_validation.py
+      hash: md5
+      md5: 782318a0335fc4bc24728529c689159c
+      size: 6975
+    - path: src/wine_quality_prediction/config/configuration.py
+      hash: md5
+      md5: 63748c23f4edf67b4b9c958cde4e2ad2
+      size: 4149
+    - path: src/wine_quality_prediction/entity/config_entity.py
+      hash: md5
+      md5: 52a6c5ca61981dbbfa5848eb8012b8b4
+      size: 1264
+    - path: src/wine_quality_prediction/pipeline/stage_02_data_validation.py
+      hash: md5
+      md5: 8d063fe304b48bd9da94b36457d14cbe
+      size: 1011
+    - path: src/wine_quality_prediction/utils/common.py
+      hash: md5
+      md5: fc42893b00029b34abe99c74e3787c96
+      size: 4909
+    outs:
+    - path: artifacts/data_validation/status.json
+      hash: md5
+      md5: 711f3ceee1bb77493a750ecb73b93cc6
+      size: 94
+  data_transformation:
+    cmd: python -m 
+      src.wine_quality_prediction.pipeline.stage_03_data_transformation
+    deps:
+    - path: artifacts/data_ingestion/WineQT.csv
+      hash: md5
+      md5: 6a883fd98624e18c0b7ce251f4fab4fb
+      size: 100951
+    - path: artifacts/data_validation/status.json
+      hash: md5
+      md5: 711f3ceee1bb77493a750ecb73b93cc6
+      size: 94
+    - path: config/config.yaml
+      hash: md5
+      md5: d701975bf4048e83304714e369296204
+      size: 1778
+    - path: src/wine_quality_prediction/components/data_transformation.py
+      hash: md5
+      md5: c0b342d2a1fa44d86235cca27098e26a
+      size: 4831
+    - path: src/wine_quality_prediction/config/configuration.py
+      hash: md5
+      md5: 63748c23f4edf67b4b9c958cde4e2ad2
+      size: 4149
+    - path: src/wine_quality_prediction/entity/config_entity.py
+      hash: md5
+      md5: 52a6c5ca61981dbbfa5848eb8012b8b4
+      size: 1264
+    - path: src/wine_quality_prediction/pipeline/stage_03_data_transformation.py
+      hash: md5
+      md5: 261cf9afd6e0994d225c2a8d8d032ded
+      size: 1125
+    - path: src/wine_quality_prediction/utils/common.py
+      hash: md5
+      md5: fc42893b00029b34abe99c74e3787c96
+      size: 4909
+    params:
+      config/params.yaml:
+        TRAINING:
+          test_size: 0.2
+          random_state: 42
+          development:
+            n_jobs: 4
+            cv: 3
+          production:
+            n_jobs: 2
+            cv: 5
+    outs:
+    - path: artifacts/data_transformation/status.json
+      hash: md5
+      md5: 92f11a5d7e71f989aa770aaa8cd5a540
+      size: 98
+    - path: artifacts/data_transformation/test.csv
+      hash: md5
+      md5: ebb30236ef13073118674dcf0a1d9720
+      size: 16027
+    - path: artifacts/data_transformation/train.csv
+      hash: md5
+      md5: 9adf653819f6b90351bce981b7bbb195
+      size: 63591
+  model_trainer:
+    cmd: python -m src.wine_quality_prediction.pipeline.stage_04_model_trainer
+    deps:
+    - path: artifacts/data_transformation/train.csv
+      hash: md5
+      md5: 9adf653819f6b90351bce981b7bbb195
+      size: 63591
+    - path: config/config.yaml
+      hash: md5
+      md5: d701975bf4048e83304714e369296204
+      size: 1778
+    - path: config/schema.yaml
+      hash: md5
+      md5: a38864e0b1661ee1d8af9dd3c09aaa66
+      size: 317
+    - path: src/wine_quality_prediction/components/model_trainer.py
+      hash: md5
+      md5: 464cb4834ed44d050447d59c0885228e
+      size: 7994
+    - path: src/wine_quality_prediction/config/configuration.py
+      hash: md5
+      md5: 63748c23f4edf67b4b9c958cde4e2ad2
+      size: 4149
+    - path: src/wine_quality_prediction/entity/config_entity.py
+      hash: md5
+      md5: 52a6c5ca61981dbbfa5848eb8012b8b4
+      size: 1264
+    - path: src/wine_quality_prediction/pipeline/stage_04_model_trainer.py
+      hash: md5
+      md5: 39f49497053b0bc625c986c523f0f08b
+      size: 1060
+    - path: src/wine_quality_prediction/utils/common.py
+      hash: md5
+      md5: fc42893b00029b34abe99c74e3787c96
+      size: 4909
+    params:
+      config/params.yaml:
+        BAYESIAN_OPTIMIZATION:
+          n_trials: 500
+          direction: maximize
+          scoring: r2
+        TRAINING:
+          test_size: 0.2
+          random_state: 42
+          development:
+            n_jobs: 4
+            cv: 3
+          production:
+            n_jobs: 2
+            cv: 5
+        XGBOOST:
+          n_estimators:
+            low: 50
+            high: 200
+          max_depth:
+            low: 2
+            high: 7
+          learning_rate:
+            low: 0.01
+            high: 0.1
+          subsample:
+            low: 0.6
+            high: 0.9
+          colsample_bytree:
+            low: 0.6
+            high: 0.9
+          min_child_weight:
+            low: 1
+            high: 10
+          reg_alpha:
+            low: 0.0
+            high: 1.0
+          reg_lambda:
+            low: 1
+            high: 10
+    outs:
+    - path: artifacts/model_trainer/model.joblib
+      hash: md5
+      md5: 63f8a41d290695a57d8fb252607a59e0
+      size: 145699
+    - path: artifacts/model_trainer/status.json
+      hash: md5
+      md5: de97770f35eae65699f8cf7b2893f8c8
+      size: 92
+  model_evaluation:
+    cmd: python -m 
+      src.wine_quality_prediction.pipeline.stage_05_model_evaluation
+    deps:
+    - path: artifacts/data_transformation/test.csv
+      hash: md5
+      md5: ebb30236ef13073118674dcf0a1d9720
+      size: 16027
+    - path: artifacts/model_trainer/model.joblib
+      hash: md5
+      md5: 63f8a41d290695a57d8fb252607a59e0
+      size: 145699
+    - path: config/config.yaml
+      hash: md5
+      md5: d701975bf4048e83304714e369296204
+      size: 1778
+    - path: config/schema.yaml
+      hash: md5
+      md5: a38864e0b1661ee1d8af9dd3c09aaa66
+      size: 317
+    - path: src/wine_quality_prediction/components/model_evaluation.py
+      hash: md5
+      md5: 4f032e805ace171625d2ad756530097e
+      size: 6463
+    - path: src/wine_quality_prediction/config/configuration.py
+      hash: md5
+      md5: 63748c23f4edf67b4b9c958cde4e2ad2
+      size: 4149
+    - path: src/wine_quality_prediction/entity/config_entity.py
+      hash: md5
+      md5: 52a6c5ca61981dbbfa5848eb8012b8b4
+      size: 1264
+    - path: src/wine_quality_prediction/pipeline/stage_05_model_evaluation.py
+      hash: md5
+      md5: f9f1611d6f665456518785792488ebc4
+      size: 1044
+    - path: src/wine_quality_prediction/utils/common.py
+      hash: md5
+      md5: fc42893b00029b34abe99c74e3787c96
+      size: 4909
+    outs:
+    - path: artifacts/model_evaluation/metrics.json
+      hash: md5
+      md5: a6330f7bfbc0f860610a1350734535f3
+      size: 59
+    - path: artifacts/model_evaluation/status.json
+      hash: md5
+      md5: 1d19fb1486605390c0af79a5f094d6ed
+      size: 95
+  model_registry:
+    cmd: python -m src.wine_quality_prediction.pipeline.stage_06_model_registry
+    deps:
+    - path: artifacts/data_transformation/test.csv
+      hash: md5
+      md5: ebb30236ef13073118674dcf0a1d9720
+      size: 16027
+    - path: artifacts/model_evaluation/metrics.json
+      hash: md5
+      md5: a6330f7bfbc0f860610a1350734535f3
+      size: 59
+    - path: artifacts/model_trainer/model.joblib
+      hash: md5
+      md5: 63f8a41d290695a57d8fb252607a59e0
+      size: 145699
+    - path: config/config.yaml
+      hash: md5
+      md5: d701975bf4048e83304714e369296204
+      size: 1778
+    - path: src/wine_quality_prediction/components/model_registry.py
+      hash: md5
+      md5: a3d5fd4bb08551d65120a62b6a093989
+      size: 9762
+    - path: src/wine_quality_prediction/config/configuration.py
+      hash: md5
+      md5: 63748c23f4edf67b4b9c958cde4e2ad2
+      size: 4149
+    - path: src/wine_quality_prediction/entity/config_entity.py
+      hash: md5
+      md5: 52a6c5ca61981dbbfa5848eb8012b8b4
+      size: 1264
+    - path: src/wine_quality_prediction/pipeline/stage_06_model_registry.py
+      hash: md5
+      md5: a553a7160d67e4fb828017f120b59412
+      size: 1018
+    - path: src/wine_quality_prediction/utils/common.py
+      hash: md5
+      md5: fc42893b00029b34abe99c74e3787c96
+      size: 4909
+    outs:
+    - path: artifacts/model_registry/status.json
+      hash: md5
+      md5: a8d18dbb9fd57d9d2774e8ffdfbf2a3b
+      size: 93
+  model_packaging:
+    cmd: python -m src.wine_quality_prediction.pipeline.stage_07_model_packaging
+    deps:
+    - path: artifacts/model_registry/status.json
+      hash: md5
+      md5: a8d18dbb9fd57d9d2774e8ffdfbf2a3b
+      size: 93
+    - path: config/config.yaml
+      hash: md5
+      md5: d701975bf4048e83304714e369296204
+      size: 1778
+    - path: src/wine_quality_prediction/components/model_packaging.py
+      hash: md5
+      md5: 7c8590257873e86b05d9a66d65acea6c
+      size: 6992
+    - path: src/wine_quality_prediction/config/configuration.py
+      hash: md5
+      md5: 63748c23f4edf67b4b9c958cde4e2ad2
+      size: 4149
+    - path: src/wine_quality_prediction/entity/config_entity.py
+      hash: md5
+      md5: 52a6c5ca61981dbbfa5848eb8012b8b4
+      size: 1264
+    - path: src/wine_quality_prediction/pipeline/stage_07_model_packaging.py
+      hash: md5
+      md5: 5b857edb5a8d0fb1cbb7eeff4a0245bb
+      size: 1133
+    - path: src/wine_quality_prediction/utils/common.py
+      hash: md5
+      md5: fc42893b00029b34abe99c74e3787c96
+      size: 4909
+    outs:
+    - path: artifacts/model_packaging/info.json
+      hash: md5
+      md5: d8e4cb4ad37a3e0d0cd29a6972ba42cb
+      size: 201
+    - path: artifacts/model_packaging/status.json
+      hash: md5
+      md5: e6b0ee073d6a34d8b574843e6abbdeb9
+      size: 94

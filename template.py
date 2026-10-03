@@ -80,7 +80,7 @@ other_folders = [
     "deployment/k8s/base",
 
     # Docker
-    "docker",
+    "deploymnet/docker",
 
     # Monitoring
     "monitoring/prometheus",

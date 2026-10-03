@@ -1,0 +1,27 @@
+service: "serving.service:WineQualityService"
+
+description: "Wine quality prediction service (XGBoost, promoted via MLflow)"
+
+labels:
+  owner: arif
+  project: wine-quality-prediction
+
+include:
+  - "serving/**/*.py"
+  - "src/wine_quality_prediction/**/*.py"
+
+exclude:
+  - "**/__pycache__/**"
+
+envs:
+  - name: "PYTHONPATH"
+    value: "/home/bentoml/bento/src/src"
+
+python:
+  requirements_txt: "./serving/requirements.txt"
+
+docker:
+  distro: debian
+  python_version: "3.11"
+  system_packages:
+    - libgomp1

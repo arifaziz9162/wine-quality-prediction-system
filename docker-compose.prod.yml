@@ -1,0 +1,150 @@
+services:
+
+  postgres:
+    image: postgres:18-alpine
+    container_name: wine-quality-postgres
+
+    env_file:
+      - .env
+
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+
+    ports:
+      - "5432:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+    restart: unless-stopped
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+    networks:
+      - wine-net
+
+
+  migrate:
+    image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/wine-quality-migrate:v1.0.0
+
+    container_name: wine-quality-migrate
+
+    env_file:
+      - .env
+
+    environment:
+      DB_HOST: postgres
+      DB_PORT: "5432"
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    restart: "no"
+
+    networks:
+      - wine-net
+
+
+  bento:
+    image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/wine-quality-service:v1.0.0
+
+    container_name: wine-quality-service
+
+    ports:
+      - "3000:3000"
+
+    env_file:
+      - .env
+
+    environment:
+      PYTHONUNBUFFERED: "1"
+      DB_HOST: postgres
+      DB_PORT: "5432"
+
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+    restart: unless-stopped
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/readyz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+    networks:
+      - wine-net
+
+
+  prometheus:
+    image: prom/prometheus:v3.14.0
+    container_name: wine-quality-prometheus
+
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.retention.time=15d
+
+    volumes:
+      - ./deployment/monitoring/prometheus/prometheus.compose.yml:/etc/prometheus/prometheus.yml:ro
+      - ./deployment/monitoring/prometheus/alert_rules.yml:/etc/prometheus/alert_rules.yml:ro
+      - prometheus_data:/prometheus
+
+    ports:
+      - "9090:9090"
+
+    depends_on:
+      - bento
+
+    restart: unless-stopped
+
+    networks:
+      - wine-net
+
+
+  grafana:
+    image: grafana/grafana:13.2.0
+    container_name: wine-quality-grafana
+
+    env_file:
+      - .env
+
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+
+    volumes:
+      - ./deployment/monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./deployment/monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana_data:/var/lib/grafana
+
+    ports:
+      - "3001:3000"
+
+    depends_on:
+      - prometheus
+
+    restart: unless-stopped
+
+    networks:
+      - wine-net
+
+
+networks:
+  wine-net:
+    driver: bridge
+
+
+volumes:
+  postgres_data:
+  prometheus_data:
+  grafana_data:

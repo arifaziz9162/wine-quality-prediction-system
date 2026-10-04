@@ -102,9 +102,7 @@ class ModelPackaging:
 
             model = mlflow.xgboost.load_model(uri)
 
-            logger.info(
-                f"Successfully loaded MLflow model version {version}"
-            )
+            logger.info(f"Successfully loaded MLflow model version {version}")
 
             return model
 

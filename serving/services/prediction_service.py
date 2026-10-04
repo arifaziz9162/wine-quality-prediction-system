@@ -4,8 +4,8 @@ from serving.config import settings
 from serving.constants import FEATURE_COLUMNS
 from serving.metrics import (
     PREDICTION_ERRORS_TOTAL,
-    PREDICTIONS_VALUE,
     PREDICTIONS_TOTAL,
+    PREDICTIONS_VALUE,
     observe_features,
 )
 from serving.persistence import PredictionRepository

@@ -4,10 +4,10 @@ from .request_schema import WineInput
 from .response_schema import PredictionResponse, QualityLabel
 
 __all__ = [
-    "WineInput",
-    "QualityLabel",
-    "PredictionsResponse",
     "ModelInfoResponse",
-    "PredictionRequest",
+    "PredictionsRequest",
     "PredictionsResponse",
+    "WineInput",
+    "PredictionResponse",
+    "QualityLabel",
 ]

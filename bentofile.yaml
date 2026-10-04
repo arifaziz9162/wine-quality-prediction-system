@@ -4,7 +4,7 @@ description: "Wine quality prediction service (XGBoost, promoted via MLflow)"
 
 labels:
   owner: arif
-  project: wine-quality-prediction
+  project: wine-quality-prediction-system
 
 include:
   - "serving/**/*.py"

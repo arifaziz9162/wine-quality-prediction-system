@@ -177,8 +177,7 @@ class ModelRegistry:
             r2 = run.data.metrics.get("r2")
 
             logger.info(
-                f"Current production model - "
-                f"version='{current.version}' r2='{r2}'"
+                f"Current production model - " f"version='{current.version}' r2='{r2}'"
             )
             return r2
 

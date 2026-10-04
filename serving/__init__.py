@@ -1,1 +1,1 @@
-"""BentoML serving package for the wine quality model."""
+"""BentoML serving layer for wine quality predictions."""

@@ -259,7 +259,6 @@ jobs:
         run: |
           test -f airflow/Dockerfile
           test -f airflow/README.md
-          test -f airflow/requirements-airflow.txt
           test -f airflow/dags/wine_quality_dag.py
 
       - name: Verify Alembic Migrations

@@ -1,0 +1,36 @@
+namespace: wine-quality
+
+resources:
+  - namespace.yaml
+  - postgres.yaml
+  - migrate-job.yaml
+  - bento-deployment.yaml
+  - prometheus.yaml
+  - grafana.yaml
+
+# Copy secret.env.example to secret.env and add real values.
+secretGenerator:
+  - name: wine-quality-secrets
+    envs:
+      - secret.env
+
+configMapGenerator:
+  - name: prometheus-config
+    files:
+      - monitoring/prometheus/prometheus.k8s.yml
+      - monitoring/prometheus/alert_rules.yml
+
+  - name: grafana-datasources
+    files:
+      - monitoring/grafana/provisioning/datasources/prometheus.yml
+
+  - name: grafana-dashboard-provider
+    files:
+      - monitoring/grafana/provisioning/dashboards/dashboards.yml
+
+  - name: grafana-dashboards
+    files:
+      - monitoring/grafana/dashboards/wine-quality-overview.json
+
+generatorOptions:
+  disableNameSuffixHash: true

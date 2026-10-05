@@ -1,0 +1,89 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wine-quality-service
+  namespace: wine-quality
+  labels: {app: wine-quality-service}
+spec:
+  replicas: 2
+  selector:
+    matchLabels: {app: wine-quality-service}
+  template:
+    metadata:
+      labels: {app: wine-quality-service}
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "3000"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+        - name: wine-quality-service
+          image: wine-quality-service:latest   # replace with your registry tag; see .github/workflows/docker.yml
+          ports:
+            - name: http
+              containerPort: 3000
+          envFrom:
+            - secretRef: {name: wine-quality-secrets}
+          env:
+            - name: DB_HOST
+              value: postgres
+            - name: DB_PORT
+              value: "5432"
+          readinessProbe:
+            httpGet: {path: /readyz, port: http}
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: {path: /livez, port: http}
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+            requests: {cpu: 250m, memory: 256Mi}
+            limits: {cpu: 1, memory: 1Gi}
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels: {app: wine-quality-service}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wine-quality-service
+  namespace: wine-quality
+  labels: {app: wine-quality-service}
+spec:
+  selector: {app: wine-quality-service}
+  ports:
+    - name: http
+      port: 3000
+      targetPort: http
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: wine-quality-service
+  namespace: wine-quality
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: wine-quality-service
+  minReplicas: 2
+  maxReplicas: 6
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target: {type: Utilization, averageUtilization: 70}
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: wine-quality-service
+  namespace: wine-quality
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels: {app: wine-quality-service}

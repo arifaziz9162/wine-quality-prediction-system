@@ -279,6 +279,15 @@ jobs:
 
       - name: Validate Docker Compose Files
         run: |
+          cat > .env << 'EOF'
+          DB_USER=postgres
+          DB_PASSWORD=ci_password
+          DB_NAME=wine_quality_db
+          AWS_ACCOUNT_ID=000000000000
+          AWS_REGION=ap-south-1
+          GRAFANA_ADMIN_PASSWORD=ci_grafana_password
+          EOF
+
           docker compose -f docker-compose.prod.yml config
           docker compose -f docker-compose.dev.yml config
 

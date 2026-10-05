@@ -45,26 +45,6 @@ updates:
 
     rebase-strategy: auto
 
-  # BentoML Serving Image
-  - package-ecosystem: "docker"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "07:00"
-      timezone: "UTC"
-
-    open-pull-requests-limit: 5
-
-    labels:
-      - "dependencies"
-      - "docker"
-
-    commit-message:
-      prefix: "docker"
-      include: "scope"
-
-    rebase-strategy: auto
 
   # Airflow Docker Image
   - package-ecosystem: "docker"
@@ -81,6 +61,27 @@ updates:
       - "dependencies"
       - "docker"
       - "airflow"
+
+    commit-message:
+      prefix: "docker"
+      include: "scope"
+
+    rebase-strategy: auto
+
+  # Deployment Docker Images
+  - package-ecosystem: "docker"
+    directory: "/deployment/docker"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "07:30"
+      timezone: "UTC"
+
+    open-pull-requests-limit: 5
+
+    labels:
+      - "dependencies"
+      - "docker"
 
     commit-message:
       prefix: "docker"

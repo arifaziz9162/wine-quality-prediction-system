@@ -1,0 +1,28 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - /etc/prometheus/alert_rules.yml
+
+scrape_configs:
+  # Scrape each pod separately so replicas can be tracked individually.
+  - job_name: wine-quality-service
+    metrics_path: /metrics
+    kubernetes_sd_configs:
+      - role: endpointslice
+        namespaces:
+          names: [wine-quality]
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_service_name]
+        regex: wine-quality-service
+        action: keep
+      - source_labels: [__meta_kubernetes_endpointslice_service_name]
+        regex: http
+        action: keep
+      - source_labels: [__meta_kubernetes_pod_name]
+        target_label: pod
+
+  - job_name: prometheus
+    static_configs:
+      - targets: ["localhost:9090"]

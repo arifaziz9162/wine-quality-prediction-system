@@ -1,0 +1,64 @@
+groups:
+  - name: wine-quality-service
+    rules:
+
+      # Check if the wine prediction service is completely down
+      - alert: WineServiceDown
+        expr: up{job="wine-quality-service"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Wine quality service target {{ $labels.instance }} is down"
+
+      # Alert when more than 5% of prediction requests are failing
+      - alert: WineServiceHighErrorRate
+        expr: |
+          sum(rate(bentoml_service_request_total{endpoint="/api/v1/predict",http_response_code=~"5.."}[5m]))
+            /
+          sum(rate(bentoml_service_request_total{endpoint="/api/v1/predict"}[5m])) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "More than 5% of predictions are failing"
+
+      # Alert when prediction requests are taking too long
+      - alert: WineServiceHighLatencyP95
+        expr: |
+          histogram_quantile(
+            0.95,
+            sum by (le) (
+              rate(bentoml_service_request_duration_seconds_bucket{endpoint="/api/v1/predict"}[5m])
+            )
+          ) > 0.5
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "P95 prediction latency is above 500 ms"
+
+      # Alert when predictions are working but cannot be saved to PostgreSQL
+      - alert: WinePredictionHistoryNotSaving
+        expr: increase(wine_prediction_db_saves_total{status="failure"}[10m]) > 0
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Predictions are served but not being stored in PostgreSQL"
+
+      # Alert when the average alcohol value in live requests is
+      # significantly different from the training data
+      - alert: WineInputDriftAlcohol
+        expr: |
+          abs(
+            sum(rate(wine_input_alcohol_sum[300m]))
+            /
+            sum(rate(wine_input_alcohol_count[30m]))
+            - 10.4
+          ) > 1.0
+        for: 30m
+        labels:
+          severity: info
+        annotations:
+          summary: "Live alcohol values drifted from the training distribution"

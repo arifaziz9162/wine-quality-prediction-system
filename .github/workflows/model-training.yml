@@ -147,8 +147,8 @@ jobs:
           test -f main.py
           test -f dvc.yaml
           test -f dvc.lock
-          test -f params.yaml
-          test -f schema.yaml
+          test -f config/params.yaml
+          test -f config/schema.yaml
           test -f requirements.txt
           test -f pyproject.toml
 

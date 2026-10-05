@@ -219,12 +219,12 @@ jobs:
           from pathlib import Path
 
           for file in Path(".").rglob("*.yml"):
-            with open(file, "r") as f:
-              yaml.safe_load(f)
+              with open(file, "r") as f:
+                  list(yaml.safe_load_all(f))
 
           for file in Path(".").rglob("*.yaml"):
-            with open(file, "r") as f:
-              yaml.safe_load(f)
+              with open(file, "r") as f:
+                  list(yaml.safe_load_all(f))
 
           print("All YAML files are valid.")
           PYEOF

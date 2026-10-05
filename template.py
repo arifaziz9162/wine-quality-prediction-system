@@ -131,7 +131,7 @@ extra_files = [
     "serving/metrics/model_metrics.py",
     "serving/metrics/feature_metrics.py",
 
-    "deployment/docker/Dockerfile.migrate",
+    "deployment/docker/Dockerfile",
 
     "deployment/k8s/base/monitoring/prometheus/prometheus.compose.yml",
     "deployment/k8s/base/monitoring/prometheus/prometheus.k8s.yml",
@@ -149,6 +149,7 @@ extra_files = [
     "deployment/k8s/base/grafana.yaml",
     "deployment/k8s/base/kustomization.yaml",
     "deployment/k8s/base/secret.env.example",
+    "deployment/k8s/base/secret.env",
 
     ".github/dependabot.yml",
     ".github/workflows/ci.yml",

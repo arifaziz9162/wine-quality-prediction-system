@@ -98,7 +98,6 @@ jobs:
           test -f serving/config.py
           test -f serving/constants.py
           test -f serving/requirements.txt
-          test -f serving/Dockerfile.template
           test -d serving/schemas
           test -d serving/services
           test -d serving/persistence

@@ -284,7 +284,7 @@ jobs:
 
       - name: Verify Migration Files
         run: |
-          test -f deployment/docker/Dockerfile.migrate
+          test -f deployment/docker/Dockerfile
           test -f alembic.ini
           test -d migrations/versions
 
@@ -328,7 +328,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: deployment/docker/Dockerfile.migrate
+          file: deployment/docker/Dockerfile
           platforms: linux/amd64
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.migrate-metadata.outputs.tags }}

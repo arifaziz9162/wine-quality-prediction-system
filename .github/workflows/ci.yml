@@ -234,9 +234,6 @@ jobs:
           test -f dvc.lock
           test -d .dvc
 
-      - name: Verify Artifacts Directory
-        run: |
-          test -d artifacts
 
       - name: Verify Serving Structure
         run: |

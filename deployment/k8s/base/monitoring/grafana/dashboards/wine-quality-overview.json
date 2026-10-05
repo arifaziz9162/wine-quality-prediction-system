@@ -1,0 +1,858 @@
+{
+  "uid": "wine-quality-overview",
+  "title": "Wine Quality ML Platform",
+  "tags": [
+    "wine-quality",
+    "bentoml",
+    "mlops",
+    "kubernetes"
+  ],
+  "schemaVersion": 39,
+  "version": 2,
+  "editable": true,
+  "refresh": "10s",
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "feature",
+        "label": "Feature",
+        "type": "custom",
+        "query": "fixed_acidity,volatile_acidity,citric_acid,residual_sugar,chlorides,free_sulfur_dioxide,total_sulfur_dioxide,density,ph,sulphates,alcohol",
+        "current": {
+          "text": "alcohol",
+          "value": "alcohol"
+        },
+        "options": [
+          {
+            "text": "fixed_acidity",
+            "value": "fixed_acidity",
+            "selected": false
+          },
+          {
+            "text": "volatile_acidity",
+            "value": "volatile_acidity",
+            "selected": false
+          },
+          {
+            "text": "citric_acid",
+            "value": "citric_acid",
+            "selected": false
+          },
+          {
+            "text": "residual_sugar",
+            "value": "residual_sugar",
+            "selected": false
+          },
+          {
+            "text": "chlorides",
+            "value": "chlorides",
+            "selected": false
+          },
+          {
+            "text": "free_sulfur_dioxide",
+            "value": "free_sulfur_dioxide",
+            "selected": false
+          },
+          {
+            "text": "total_sulfur_dioxide",
+            "value": "total_sulfur_dioxide",
+            "selected": false
+          },
+          {
+            "text": "density",
+            "value": "density",
+            "selected": false
+          },
+          {
+            "text": "ph",
+            "value": "ph",
+            "selected": false
+          },
+          {
+            "text": "sulphates",
+            "value": "sulphates",
+            "selected": false
+          },
+          {
+            "text": "alcohol",
+            "value": "alcohol",
+            "selected": true
+          }
+        ]
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Service Availability",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 4,
+        "h": 5
+      },
+      "targets": [
+        {
+          "expr": "min(up{job=\"wine-quality-service\"})",
+          "legendFormat": "service",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "max": 1,
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "DOWN"
+                },
+                "1": {
+                  "text": "UP"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {}
+    },
+    {
+      "id": 2,
+      "title": "Request Rate",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 4,
+        "y": 0,
+        "w": 8,
+        "h": 5
+      },
+      "targets": [
+        {
+          "expr": "sum by (http_response_code) (rate(bentoml_service_request_total{endpoint=\"/api/v1/predict\"}[1m]))",
+          "legendFormat": "{{http_response_code}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "options": {}
+    },
+    {
+      "id": 3,
+      "title": "Prediction Throughput",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 4,
+        "h": 5
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(wine_predictions_total[5m]))",
+          "legendFormat": "predictions/sec",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "options": {}
+    },
+    {
+      "id": 4,
+      "title": "5xx Error Rate",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 0,
+        "w": 4,
+        "h": 5
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(bentoml_service_request_total{endpoint=\"/api/v1/predict\",http_response_code=~\"5..\"}[5m])) / sum(rate(bentoml_service_request_total{endpoint=\"/api/v1/predict\"}[5m]))",
+          "legendFormat": "5xx",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "options": {}
+    },
+    {
+      "id": 5,
+      "title": "P50 / P95 / P99 Latency",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 5,
+        "w": 16,
+        "h": 7
+      },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.5, sum by (le) (rate(bentoml_service_request_duration_seconds_bucket{endpoint=\"/api/v1/predict\"}[5m])))",
+          "legendFormat": "p50",
+          "refId": "A"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(bentoml_service_request_duration_seconds_bucket{endpoint=\"/api/v1/predict\"}[5m])))",
+          "legendFormat": "p95",
+          "refId": "B"
+        },
+        {
+          "expr": "histogram_quantile(0.99, sum by (le) (rate(bentoml_service_request_duration_seconds_bucket{endpoint=\"/api/v1/predict\"}[5m])))",
+          "legendFormat": "p99",
+          "refId": "C"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "options": {}
+    },
+    {
+      "id": 6,
+      "title": "In-flight Requests",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 5,
+        "w": 8,
+        "h": 7
+      },
+      "targets": [
+        {
+          "expr": "sum(bentoml_service_request_in_progress{endpoint=\"/api/v1/predict\"})",
+          "legendFormat": "in flight",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {}
+    },
+    {
+      "id": 7,
+      "title": "Model Deployment Status",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 12,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "max(wine_model_deployment_status)",
+          "legendFormat": "model",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "max": 1,
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "DOWN"
+                },
+                "1": {
+                  "text": "DEPLOYED"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {}
+    },
+    {
+      "id": 8,
+      "title": "MLflow Model Version",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 6,
+        "y": 12,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "max(wine_model_info)",
+          "legendFormat": "MLflow v{{mlflow_version}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {}
+    },
+    {
+      "id": 9,
+      "title": "Served Model R²",
+      "type": "gauge",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 12,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "max(wine_model_r2)",
+          "legendFormat": "R²",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "max": 1
+        },
+        "overrides": []
+      },
+      "options": {}
+    },
+    {
+      "id": 10,
+      "title": "Active Model Replicas",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 18,
+        "y": 12,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "sum by (mlflow_version) (wine_model_info)",
+          "legendFormat": "MLflow v{{mlflow_version}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {}
+    },
+    {
+      "id": 11,
+      "title": "Total Predictions",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 18,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "sum(increase(wine_predictions_total[$__range]))",
+          "legendFormat": "predictions",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {}
+    },
+    {
+      "id": 12,
+      "title": "Predictions by Quality Label",
+      "type": "piechart",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 6,
+        "y": 18,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "sum by (quality_label) (increase(wine_predictions_total[$__range]))",
+          "legendFormat": "{{quality_label}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {}
+    },
+    {
+      "id": 13,
+      "title": "Predicted Quality Distribution",
+      "type": "heatmap",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 18,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "expr": "sum by (le) (increase(wine_prediction_value_bucket[$__rate_interval]))",
+          "legendFormat": "{{le}}",
+          "format": "heatmap",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {
+        "calculate": false,
+        "yAxis": {
+          "axisPlacement": "left"
+        }
+      }
+    },
+    {
+      "id": 14,
+      "title": "Prediction Throughput Over Time",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 24,
+        "w": 12,
+        "h": 7
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(wine_predictions_total[5m]))",
+          "legendFormat": "predictions/sec",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "options": {}
+    },
+    {
+      "id": 15,
+      "title": "Input Drift",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 26,
+        "w": 12,
+        "h": 7
+      },
+      "targets": [
+        {
+          "expr": "abs((sum(rate(wine_input_${feature}_sum[30m])) / sum(rate(wine_input_${feature}_count[30m]))) - 10.4)",
+          "legendFormat": "drift from training mean",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {}
+    },
+    {
+      "id": 16,
+      "title": "Selected Feature Mean",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 31,
+        "w": 12,
+        "h": 7
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(wine_input_${feature}_sum[5m])) / sum(rate(wine_input_${feature}_count[5m]))",
+          "legendFormat": "mean $feature",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {}
+    },
+    {
+      "id": 17,
+      "title": "Feature Distribution",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 33,
+        "w": 12,
+        "h": 7
+      },
+      "targets": [
+        {
+          "expr": "sum by (le) (increase(wine_input_${feature}_bucket[$__rate_interval]))",
+          "legendFormat": "{{le}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {}
+    },
+    {
+      "id": 18,
+      "title": "Successful DB Saves",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 38,
+        "w": 8,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "sum(increase(wine_prediction_db_saves_total{status=\"success\"}[$__range]))",
+          "legendFormat": "successful saves",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {}
+    },
+    {
+      "id": 19,
+      "title": "Database Save Rate",
+      "type": "gauge",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 38,
+        "w": 8,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(wine_prediction_db_saves_total{status=\"success\"}[5m])) / sum(rate(wine_prediction_db_saves_total[5m]))",
+          "legendFormat": "save rate",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "max": 1,
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "options": {}
+    },
+    {
+      "id": 20,
+      "title": "Failed DB Saves",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 38,
+        "w": 8,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "sum(increase(wine_prediction_db_saves_total{status=\"failure\"}[$__range]))",
+          "legendFormat": "failed saves",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {}
+    },
+    {
+      "id": 21,
+      "title": "Kubernetes Pod Availability",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 44,
+        "w": 8,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "sum(kube_pod_status_phase{namespace=\"wine-quality\",phase=\"Running\"})",
+          "legendFormat": "running pods",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {}
+    },
+    {
+      "id": 22,
+      "title": "Kubernetes CPU Usage",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 44,
+        "w": 8,
+        "h": 7
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"wine-quality\",container!=\"\",container!=\"POD\"}[5m]))",
+          "legendFormat": "CPU cores",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "cores"
+        },
+        "overrides": []
+      },
+      "options": {}
+    },
+    {
+      "id": 23,
+      "title": "Kubernetes Memory Usage",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 44,
+        "w": 8,
+        "h": 7
+      },
+      "targets": [
+        {
+          "expr": "sum(container_memory_working_set_bytes{namespace=\"wine-quality\",container!=\"\",container!=\"POD\"})",
+          "legendFormat": "memory",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "options": {}
+    },
+    {
+      "id": 24,
+      "title": "Kubernetes Pod Restarts",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 51,
+        "w": 12,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "sum(increase(kube_pod_container_status_restarts_total{namespace=\"wine-quality\"}[1h]))",
+          "legendFormat": "restarts in last hour",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {}
+    },
+    {
+      "id": 25,
+      "title": "Kubernetes Replica Count",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 51,
+        "w": 12,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "kube_deployment_status_replicas_available{namespace=\"wine-quality\"}",
+          "legendFormat": "available replicas",
+          "refId": "A"
+        },
+        {
+          "expr": "kube_deployment_spec_replicas{namespace=\"wine-quality\"}",
+          "legendFormat": "desired replicas",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {}
+    }
+  ]
+}

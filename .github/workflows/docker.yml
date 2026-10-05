@@ -1,0 +1,382 @@
+name: Docker Build and Publish
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+
+    tags:
+      - "v*"
+
+    paths:
+      - "serving/**"
+      - "src/wine_quality_prediction/components/model_packaging.py"
+      - "bentofile.yaml"
+      - "deployment/docker/**"
+      - "docker-compose.dev.yml"
+      - "docker-compose.prod.yml"
+      - "requirements-dev.txt"
+      - "requirements.txt"
+      - "pyproject.toml"
+      - ".github/workflows/docker.yml"
+
+  pull_request:
+    branches:
+      - main
+      - develop
+
+    paths:
+      - "serving/**"
+      - "src/wine_quality_prediction/components/model_packaging.py"
+      - "bentofile.yaml"
+      - "deployment/docker/**"
+      - "docker-compose.dev.yml"
+      - "docker-compose.prod.yml"
+      - ".github/workflows/docker.yml"
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+  id-token: write
+
+concurrency:
+  group: docker-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: "3.11"
+
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+  AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+
+  REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+
+  BENTO_IMAGE: wine-quality-service
+  MIGRATE_IMAGE: wine-quality-migrate
+
+jobs:
+
+  package-model:
+
+    name: Package Production Model (BentoML)
+
+    runs-on: ubuntu-latest
+
+    timeout-minutes: 20
+
+    outputs:
+      bento-tag: ${{ steps.package.outputs.bento-tag }}
+
+    steps:
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Verify Serving Files
+        run: |
+          test -d serving
+          test -f serving/service.py
+          test -f serving/requirements.txt
+          test -f bentofile.yaml
+          test -f src/wine_quality_prediction/components/model_packaging.py
+
+          echo "Serving structure verified."
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      # This env intentionally has bentoml and NOT dagshub - the two cannot
+      # be installed together (conflicting httpx/anyio pins). model_packaging.py
+      # talks to DagsHub via plain MLflow env vars, never importing dagshub
+      # itself, and components/__init__.py uses lazy (PEP 562) imports so
+      # importing ModelPackaging here never pulls in model_registry.py's
+      # `import dagshub`. See CHANGES.md for how this was verified.
+      - name: Install Packaging Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r serving/requirements.txt
+          python -m pip install -e . --no-deps
+
+      - name: Pull DVC Cache (Production Model Metadata)
+        run: |
+          python -m pip install "dvc==3.51.2" "pathspec==0.12.1"
+          dvc pull artifacts/model_registry
+
+      - name: Package Production Model into BentoML Store
+        id: package
+        env:
+          DAGSHUB_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
+        run: |
+          dvc repro model_packaging
+          tag=$(python -c "import json; print(json.load(open('artifacts/model_packaging/info.json'))['bento_model'])")
+          echo "bento-tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "Packaged: $tag"
+
+      - name: Upload Packaging Info
+        uses: actions/upload-artifact@v4
+        with:
+          name: model-packaging-info
+          path: artifacts/model_packaging/info.json
+          retention-days: 30
+
+  bento:
+
+    name: Build and Push BentoML Service Image
+
+    needs: package-model
+
+    runs-on: ubuntu-latest
+
+    timeout-minutes: 40
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: Install BentoML
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r serving/requirements.txt
+          python -m pip install -e . --no-deps
+
+      - name: Restore Packaged Model Store
+        run: |
+          python -m pip install "dvc==3.51.2" "pathspec==0.12.1"
+          dvc pull artifacts/model_registry artifacts/model_packaging
+
+      - name: Re-package Model into Local BentoML Store
+        env:
+          DAGSHUB_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
+        run: |
+          # The BentoML model store lives outside artifacts/ (DVC-tracked
+          # dirs), so each runner re-packages from the same Production MLflow
+          # version. model_packaging.py's find_existing() check means this is
+          # cheap: it reuses the already-known model rather than duplicating it.
+          dvc repro model_packaging
+
+      - name: Build Bento
+        run: |
+          bentoml build -f bentofile.yaml
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ secrets.AWS_REGION }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Extract Bento Image Metadata
+        id: bento-metadata
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ${{ env.REGISTRY }}/${{ env.BENTO_IMAGE }}
+
+          tags: |
+            type=ref,event=branch
+            type=ref,event=tag
+            type=sha
+            type=raw,value=latest,enable={{is_default_branch}}
+
+          labels: |
+            org.opencontainers.image.title=Wine Quality Service
+            org.opencontainers.image.description=Wine Quality Prediction BentoML Service
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.license=MIT
+
+      - name: Containerize Bento
+        run: |
+          tag="${{ env.REGISTRY }}/${{ env.BENTO_IMAGE }}:${{ github.sha }}"
+          bentoml containerize wine_quality_service:latest -t "$tag" \
+            --opt platform=linux/amd64
+
+      - name: Push Bento Image
+        if: github.event_name != 'pull_request'
+        run: |
+          for tag in $(echo "${{ steps.bento-metadata.outputs.tags }}"); do
+            docker tag "${{ env.REGISTRY }}/${{ env.BENTO_IMAGE }}:${{ github.sha }}" "$tag"
+            docker push "$tag"
+          done
+
+      - name: Scan Bento Image
+        if: github.event_name != 'pull_request'
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: |
+            ${{ env.REGISTRY }}/${{ env.BENTO_IMAGE }}:${{ github.sha }}
+          format: sarif
+          output: trivy-bento-results.sarif
+          ignore-unfixed: true
+          vuln-type: os,library
+          severity: CRITICAL,HIGH
+
+      - name: Upload Bento Sarif Report
+        if: github.event_name != 'pull_request'
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-bento-results.sarif
+
+      - name: Upload Bento Trivy Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bento-trivy-report
+          path: trivy-bento-results.sarif
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Display Bento Image Information
+        if: github.event_name != 'pull_request'
+        run: |
+          echo "=================================="
+          echo "BentoML Service Docker Image"
+          echo "=================================="
+          echo "Repository : ${{ github.repository }}"
+          echo "Branch: ${{ github.ref_name }}"
+          echo "Commit: ${{ github.sha }}"
+          echo "Registry: ${{ env.REGISTRY }}"
+          echo "Image : ${{ env.BENTO_IMAGE }}"
+
+  migrate-image:
+
+    name: Build Migration Image
+
+    runs-on: ubuntu-latest
+
+    timeout-minutes: 15
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Verify Migration Files
+        run: |
+          test -f deployment/docker/Dockerfile.migrate
+          test -f alembic.ini
+          test -d migrations/versions
+
+          echo "Migration structure verified."
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ secrets.AWS_REGION }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Extract Migrate Image Metadata
+        id: migrate-metadata
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ${{ env.REGISTRY }}/${{ env.MIGRATE_IMAGE }}
+
+          tags: |
+            type=ref,event=branch
+            type=ref,event=tag
+            type=sha
+            type=raw,value=latest,enable={{is_default_branch}}
+
+          labels: |
+            org.opencontainers.image.title=Wine Quality Migrate
+            org.opencontainers.image.description=One-shot Alembic migration image
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.license=MIT
+
+      - name: Build and Push Migrate Image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: deployment/docker/Dockerfile.migrate
+          platforms: linux/amd64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.migrate-metadata.outputs.tags }}
+          labels: ${{ steps.migrate-metadata.outputs.labels }}
+
+  summary:
+
+    name: Docker Workflow Summary
+
+    needs:
+      - package-model
+      - bento
+      - migrate-image
+
+    runs-on: ubuntu-latest
+
+    if: always()
+
+    steps:
+
+      - name: Docker Workflow Summary
+        run: |
+          {
+            echo "# Docker Build and Publish Summary"
+            echo ""
+            echo "## Build Results"
+            echo "| Image | Status |"
+            echo "|-------|--------|"
+            echo "| Model Packaging | Completed |"
+            echo "| BentoML Service Image | Completed |"
+            echo "| Migration Image | Completed |"
+            echo "| Trivy Security Scan | Completed |"
+            echo ""
+            echo "## Amazon ECR Images"
+            echo "Service: ${{ env.REGISTRY }}/${{ env.BENTO_IMAGE }}"
+            echo "Migrate: ${{ env.REGISTRY }}/${{ env.MIGRATE_IMAGE }}"
+            echo ""
+            echo "## Packaged Model"
+            echo "${{ needs.package-model.outputs.bento-tag }}"
+            echo ""
+            echo "## Workflow Information"
+            echo "- Repository: $GITHUB_REPOSITORY"
+            echo "- Branch: $GITHUB_REF_NAME"
+            echo "- Commit: $GITHUB_SHA"
+            echo "- Actor: $GITHUB_ACTOR"
+            echo "- Workflow: $GITHUB_WORKFLOW"
+            echo "- Run ID: $GITHUB_RUN_ID"
+            echo "- Runner: $RUNNER_OS"
+            echo ""
+            echo "Docker Build and Publish workflow completed successfully."
+          } >> $GITHUB_STEP_SUMMARY

@@ -1,0 +1,406 @@
+name: Model Training Pipeline
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - "src/**"
+      - "config/**"
+      - "dvc.yaml"
+      - "dvc.lock"
+      - "main.py"
+      - ".github/workflows/model-training.yml"
+
+  pull_request:
+    branches:
+      - main
+      - develop
+    paths:
+      - "src/**"
+      - "config/**"
+      - "dvc.yaml"
+      - "dvc.lock"
+
+  workflow_dispatch:
+
+  schedule:
+    - cron: "0 2 * * 0"
+
+permissions:
+  contents: read
+  actions: read
+  checks: write
+
+concurrency:
+  group: model-training-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: "3.11"
+
+  PYTHONUNBUFFERED: "1"
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+
+  ENV: production
+
+  KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
+  KAGGLE_KEY: ${{ secrets.KAGGLE_API_TOKEN }}
+
+  DAGSHUB_USERNAME: ${{ secrets.DAGSHUB_USERNAME }}
+  DAGSHUB_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
+
+jobs:
+
+  train-model:
+
+    name: Train and Evaluate Model
+
+    runs-on: ubuntu-latest
+
+    timeout-minutes: 60
+
+    services:
+
+      postgres:
+
+        image: postgres:18
+
+        env:
+          POSTGRES_DB: wine_quality_db
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+
+        ports:
+          - 5432:5432
+
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    env:
+      DB_HOST: localhost
+      DB_PORT: 5432
+      DB_NAME: wine_quality_db
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+
+    steps:
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: Restore pip Cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Restore DVC Cache
+        uses: actions/cache@v4
+        with:
+          path: .dvc/cache
+          key: ${{ runner.os }}-dvc-${{ hashFiles('dvc.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-dvc-
+
+      - name: Display Environment Information
+        run: |
+          echo "Repository : $GITHUB_REPOSITORY"
+          echo "Branch : $GITHUB_REF_NAME"
+          echo "Runner : $RUNNER_OS"
+
+          python --version
+          pip --version
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgomp1
+
+      - name: Install Project Dependencies
+        run: |
+            python -m pip install --upgrade pip
+            python -m pip install -r requirements.txt
+            python -m pip install -r requirements-dev.txt
+            python -m pip install -e .
+
+      - name: Verify Project Structure
+        run: |
+          test -d src
+          test -d config
+          test -d notebooks
+
+          test -f main.py
+          test -f dvc.yaml
+          test -f dvc.lock
+          test -f params.yaml
+          test -f schema.yaml
+          test -f requirements.txt
+          test -f pyproject.toml
+
+      - name: Display DVC Version
+        run: |
+          dvc version
+
+      - name: Verify MLflow Installation
+        run: |
+          mlflow --version
+
+      - name: Verify Optuna Installation
+        run: |
+          optuna --version
+
+      - name: Pull DVC Data
+        run: |
+          dvc pull
+
+      - name: Verify Dataset
+        run: |
+          test -f artifacts/data_ingestion/WineQT.csv
+
+      - name: Display Dataset Information
+        run: |
+          python - <<EOF
+          import pandas as pd
+
+          df = pd.read_csv("artifacts/data_ingestion/WineQT.csv")
+
+          print("=" * 60)
+          print("Dataset Shape")
+          print(df.shape)
+
+          print("=" * 60)
+          print("Columns")
+          print(df.columns.tolist())
+
+          print("=" * 60)
+          print("Missing Values")
+          print(df.isnull().sum())
+          EOF
+
+      - name: Execute Training Pipeline
+        run: |
+          python main.py
+
+      - name: Verify Pipeline Outputs
+        run: |
+          test -f artifacts/data_transformation/train.csv
+          test -f artifacts/data_transformation/test.csv
+          test -f artifacts/model_trainer/model.joblib
+          test -f artifacts/model_evaluation/metrics.json
+          test -f artifacts/model_registry/status.json
+
+          # model_packaging (stage_07) is intentionally NOT run here. It
+          # needs bentoml, which cannot be installed alongside dagshub (see
+          # requirements.txt vs serving/requirements.txt). It runs in its own
+          # job/venv in .github/workflows/docker.yml's package-model job,
+          # triggered separately whenever Production changes.
+
+      - name: Display Evaluation Metrics
+        run: |
+          python - <<EOF
+          import json
+
+          with open("artifacts/model_evaluation/metrics.json", "r") as f:
+            metrics = json.load(f)
+
+          print("=" * 60)
+          print("Evaluation Metrics")
+          print(metrics)
+          EOF
+
+      - name: Show Generated Artifacts
+        run: |
+          find artifacts -type f | sort
+
+      - name: Display Pipeline Status Files
+        run: |
+          find artifacts -name "status.json" -exec cat {} \;
+
+      - name: Verify DVC Status
+        run: |
+          dvc status
+
+      - name: Upload Model Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: trained-model
+          path: |
+            artifacts/model_trainer/model.joblib
+            artifacts/model_registry/status.json
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload Evaluation Metrics
+        uses: actions/upload-artifact@v4
+        with:
+          name: evaluation-metrics
+          path: |
+            artifacts/model_evaluation/metrics.json
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload Evaluation Reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: evaluation-reports
+          path: |
+            reports/
+          if-no-files-found: ignore
+          retention-days: 30
+
+      - name: Upload Pipeline Status
+        uses: actions/upload-artifact@v4
+        with:
+          name: pipeline-status
+          path: |
+            artifacts/**/status.json
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload DVC files
+        uses: actions/upload-artifact@v4
+        with:
+          name: dvc-files
+          path: |
+            dvc.yaml
+            dvc.lock
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Print Final Structure
+        if: always()
+        run: |
+          find . -maxdepth 3 | sort
+
+      - name: Validate Model Performance Threshold
+        run: |
+          python - <<EOF
+          import json
+          from pathlib import Path
+
+          metrics_file = Path("artifacts/model_evaluation/metrics.json")
+
+          if not metrics_file.exists():
+            raise FileNotFoundError(metrics_file)
+
+          with open(metrics_file) as f:
+            metrics = json.load(f)
+
+          r2 = metrics.get("r2")
+
+          if r2 is None:
+            raise ValueError("r2 not found in metrics.json")
+
+          print(f"Test R2: '{r2}'")
+
+          if r2 < 0.45:
+            raise RuntimeError(f"Model Quality gate failed. R2={r2}")
+
+          print("Quality gate passed")
+          EOF
+
+      - name: Verify Model Artifact
+        run: |
+          python - <<EOF
+          import joblib
+
+          model = joblib.load("artifacts/model_trainer/model.joblib")
+          print(type(model))
+          print("Model loaded successfully")
+          EOF
+
+      - name: Display Artifacts Sizes
+        run: |
+          du -sh artifacts || true
+          du -sh reports || true
+
+      - name: Upload Complete Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: mlops-artifacts
+          path: |
+            artifacts/model_trainer/model.joblib
+            artifacts/model_evaluation/metrics.json
+            reports/**
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload Logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pipeline-logs
+          path: |
+            logs/**
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Debug Failure
+        if: failure()
+        run: |
+          echo "Workflow Failed"
+
+          echo "Directory Structure"
+          find . -maxdepth 3
+
+          echo "Artifacts"
+          find artifacts -type f || true
+
+          echo "Logs"
+          find logs -type f || true
+
+      - name: Cleanup Space
+        if: always()
+        run: |
+          find . -name "__pycache__" -type d -exec rm -rf {} +
+          find . -name "*.pyc" -delete
+
+      - name: Model Training Pipeline Summary
+        if: always()
+        run: |
+          {
+            echo "# Model Training Pipeline Summary"
+            echo ""
+            echo "Pipeline Results"
+            echo "| Stage | Status |"
+            echo "|-------|--------|"
+            echo "| DVC Data Pull | Completed |"
+            echo "| Model Training | Completed |"
+            echo "| Model Validation | Completed |"
+            echo "| Model Evaluation | Completed |"
+            echo "| Quality Gate | Completed |"
+            echo "| Artifact Upload | Completed |"
+            echo ""
+            echo "## Generated Artifacts"
+            echo "- Trained Model"
+            echo "- Evaluation Metrics"
+            echo "- Evaluation Reports"
+            echo "- Pipeline Status"
+            echo "- DVC Metadata"
+            echo ""
+            echo "## Workflow Information"
+            echo "- Repository: $GITHUB_REPOSITORY"
+            echo "- Branch: $GITHUB_REF_NAME"
+            echo "- Commit: $GITHUB_SHA"
+            echo "- Actor: $GITHUB_ACTOR"
+            echo "- Workflow: $GITHUB_WORKFLOW"
+            echo "- Run Id: $GITHUB_RUN_ID"
+            echo "- Runner: $RUNNER_OS"
+            echo ""
+            echo "Model Training Pipeline completed successfully."
+          } >> $GITHUB_STEP_SUMMARY

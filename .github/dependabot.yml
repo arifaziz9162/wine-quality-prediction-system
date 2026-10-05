@@ -1,0 +1,89 @@
+version: 2
+
+updates:
+  # Python Dependencies
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "UTC"
+
+    open-pull-requests-limit: 10
+
+    labels:
+      - "dependencies"
+      - "python"
+
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+
+    versioning-strategy: increase
+
+    rebase-strategy: auto
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:30"
+      timezone: "UTC"
+
+    open-pull-requests-limit: 5
+
+    labels:
+      - "dependencies"
+      - "github-actions"
+
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+
+    rebase-strategy: auto
+
+  # BentoML Serving Image
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "07:00"
+      timezone: "UTC"
+
+    open-pull-requests-limit: 5
+
+    labels:
+      - "dependencies"
+      - "docker"
+
+    commit-message:
+      prefix: "docker"
+      include: "scope"
+
+    rebase-strategy: auto
+
+  # Airflow Docker Image
+  - package-ecosystem: "docker"
+    directory: "/airflow"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "07:15"
+      timezone: "UTC"
+
+    open-pull-requests-limit: 5
+
+    labels:
+      - "dependencies"
+      - "docker"
+      - "airflow"
+
+    commit-message:
+      prefix: "docker"
+      include: "scope"
+
+    rebase-strategy: auto

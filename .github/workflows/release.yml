@@ -1,0 +1,192 @@
+name: Create Github Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref_name }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: "3.11"
+
+jobs:
+
+  release:
+
+    name: Create Release
+
+    runs-on: ubuntu-latest
+
+    timeout-minutes: 20
+
+    steps:
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: Install Python Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          python -m pip install -r requirements-dev.txt
+          python -m pip install -e .
+
+      - name: Display Environment Information
+        run: |
+          echo "Repository: $GITHUB_REPOSITORY"
+          echo "Tag: $GITHUB_REF_NAME"
+          echo "Runner: $RUNNER_OS"
+
+          python --version
+          pip --version
+
+      - name: Verify Project Structure
+        run: |
+          test -d serving
+          test -d deployment
+          test -d src
+          test -d config
+
+          test -f pyproject.toml
+          test -f requirements.txt
+          test -f requirements-dev.txt
+          test -f docker-compose.prod.yml
+          test -f dvc.yaml
+          test -f dvc.lock
+
+          test -f config/config.yaml
+          test -f config/params.yaml
+          test -f config/schema.yaml
+
+          test -f bentofile.yaml
+          test -f serving/service.py
+
+          echo "Project structure verified."
+
+      - name: Verify Git Tag
+        run: |
+          echo "Release Tag: $GITHUB_REF_NAME"
+          git describe --tags --always
+
+      - name: Pull DVC Artifacts
+        run: |
+          dvc pull
+
+      - name: Verify Release Artifacts
+        run: |
+          test -d artifacts
+
+          test -f artifacts/model_trainer/model.joblib
+          test -f artifacts/model_evaluation/metrics.json
+          test -f artifacts/model_packaging/info.json
+
+          echo "Release artifacts verified."
+
+      - name: Archive Model Artifacts
+        run: |
+          tar -czf wine-quality-artifacts.tar.gz \
+            artifacts \
+            reports \
+            dvc.yaml \
+            dvc.lock
+
+      - name: Generate Release Notes
+        run: |
+          {
+            echo "# Wine Quality Prediction"
+            echo ""
+            echo "## Highlights"
+            echo "Production Docker Images"
+            echo "Trained ML Model"
+            echo "Evaluation Metrics"
+            echo "DVC Metadata"
+            echo "CI/CD Improvements"
+            echo "Security Scan"
+          } > RELEASE_NOTES.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+          generate_release_notes: true
+          files: |
+            wine-quality-artifacts.tar.gz
+            artifacts/model_evaluation/metrics.json
+            artifacts/model_packaging/info.json
+            RELEASE_NOTES.md
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Release Bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-package
+          path: |
+            wine-quality-artifacts.tar.gz
+            RELEASE_NOTES.md
+          if-no-files-found: ignore
+          retention-days: 30
+
+      - name: Display Workspace Size
+        if: always()
+        run: |
+          du -sh .
+          du -sh artifacts || true
+          du -sh reports || true
+
+      - name: Print Repository Structure
+        if: always()
+        run: |
+          find . -maxdepth 3 | sort
+
+      - name: Cleanup Workspace
+        if: always()
+        run: |
+          find . -name "__pycache__" -type d -exec rm -rf {} +
+          find . -name "*.pyc" -delete
+
+      - name: Generate GitHub Release Summary
+        if: always()
+        run: |
+          {
+            echo "# GitHub Release Summary"
+            echo ""
+            echo "## Release Information"
+            echo "| Item | Value |"
+            echo "|------|-------|"
+            echo "| Release | $GITHUB_REF_NAME |"
+            echo "| Repository | $GITHUB_REPOSITORY |"
+            echo "| Branch | $GITHUB_REF_NAME |"
+            echo "| Commit | $GITHUB_SHA |"
+            echo "| Actor | $GITHUB_ACTOR |"
+            echo "| Workflow | $GITHUB_WORKFLOW |"
+            echo "| Run_Id | $GITHUB_RUN_ID |"
+            echo "| Runner | $RUNNER_OS |"
+            echo ""
+            echo "## Included Assets"
+            echo "- Wine Quality Model"
+            echo "- Evaluation Metrics"
+            echo "- BentoML Packaging Info"
+            echo "- DVC Files"
+            echo "- Reports"
+            echo "- Release Notes"
+            echo ""
+            echo "GitHub Release completed successfully."
+          } >> $GITHUB_STEP_SUMMARY

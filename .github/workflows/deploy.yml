@@ -1,0 +1,244 @@
+name: Deploy to AWS EC2
+
+on:
+  workflow_run:
+    workflows:
+      - Docker Build and Publish
+    types:
+      - completed
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+  AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+
+  REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+
+  BENTO_IMAGE: wine-quality-service
+  MIGRATE_IMAGE: wine-quality-migrate
+
+jobs:
+
+  deploy:
+
+    name: Deploy Application
+
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+
+    runs-on: ubuntu-latest
+
+    timeout-minutes: 30
+
+    environment:
+      name: production
+
+    steps:
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Verify Deployment Files
+        run: |
+          test -d serving
+          test -d deployment
+          test -d migrations
+
+          test -f deployment/docker/Dockerfile.migrate
+          test -f docker-compose.prod.yml
+          test -f alembic.ini
+
+          echo "Deployment files verified."
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ secrets.AWS_REGION }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      - name: Setup SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+
+      - name: Add EC2 Host
+        run: |
+          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Verify SSH Connection
+        run: |
+          ssh \
+            -o StrictHostKeyChecking=yes \
+            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} \
+            "echo 'Connected Successfully.'"
+
+      - name: Deploy Application on EC2
+        run: |
+          ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
+          set -e
+          echo "Connected to EC2"
+
+          cd ~/wine-quality-prediction
+
+          echo "Logging into AMAZON ECR..."
+          aws ecr get-login-password \
+          --region ${{ secrets.AWS_REGION }} | docker login \
+          --username AWS \
+          --password-stdin \
+          ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+
+          echo "Pulling Latest Docker Images..."
+          docker compose -f docker-compose.prod.yml pull
+
+          echo "Stopping Existing Containers..."
+          docker compose -f docker-compose.prod.yml down
+
+          echo "Starting PostgreSQL container..."
+          docker compose -f docker-compose.prod.yml up -d postgres
+
+          echo "Waiting for PostgreSQL..."
+          sleep 10
+
+          echo "Checking PostgreSQL..."
+          docker compose -f docker-compose.prod.yml ps postgres
+
+          echo "Running Alembic migrations..."
+          docker compose -f docker-compose.prod.yml run --rm migrate
+
+          echo "Starting BentoML service..."
+          docker compose -f docker-compose.prod.yml up -d bento
+
+          echo "Starting monitoring stack..."
+          docker compose -f docker-compose.prod.yml up -d prometheus grafana
+
+          echo "Running Containers..."
+          docker compose -f docker-compose.prod.yml ps
+
+          echo "Removing Unused Docker Images..."
+          docker image prune -af
+
+          EOF
+
+      - name: Wait For Services
+        run: |
+          ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} \
+            sleep "20"
+
+      - name: Verify Deployment
+        run: |
+          ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
+          set -e
+
+          cd ~/wine-quality-prediction
+
+          docker compose -f docker-compose.prod.yml ps
+
+          echo ""
+          echo "Amazon ECR Images"
+          docker images
+
+          echo ""
+          echo "Docker Disk Usage"
+          docker system df
+
+          EOF
+
+      - name: Health Check
+        run: |
+          ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
+          set -e
+
+          cd ~/wine-quality-prediction
+
+          docker compose -f docker-compose.prod.yml ps
+
+          response=\$(curl --fail http://localhost:3000/readyz)
+
+          echo "\$response"
+
+          echo "Health check passed."
+
+          EOF
+
+      - name: Display Docker Information
+        run: |
+          ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
+
+          docker images
+
+          echo ""
+          docker ps -a
+
+          echo ""
+          docker volume ls
+
+          echo ""
+          docker network ls
+
+          EOF
+
+      - name: Debug Deployment Failure
+        if: failure()
+        run: |
+          ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
+
+          cd ~/wine-quality-prediction
+
+          docker compose -f docker-compose.prod.yml ps
+
+          echo ""
+          echo "PostgreSQL Logs"
+          docker compose -f docker-compose.prod.yml logs postgres || true
+
+          echo ""
+          echo "Migrate Logs"
+          docker compose -f docker-compose.prod.yml logs migrate || true
+
+          echo ""
+          echo "Bento Service Logs"
+          docker compose -f docker-compose.prod.yml logs bento || true
+
+          EOF
+
+      - name: Deployment Summary
+        if: always()
+        run: |
+          {
+            echo "# AWS EC2 Deployment Summary"
+            echo ""
+            echo "## Deployment Status"
+            echo "| Stage | Status |"
+            echo "|-------|--------|"
+            echo "| Amazon ECR Login | Completed |"
+            echo "| Pull Latest ECR Images | Completed |"
+            echo "| Stop Previous Containers | Completed |"
+            echo "| Start PostgreSQL | Completed |"
+            echo "| Alembic Migrations | Completed |"
+            echo "| Start BentoML Service | Completed |"
+            echo "| Start Monitoring Stack | Completed |"
+            echo "| Health Check | Completed |"
+            echo ""
+            echo "## Deployment Information"
+            echo "- Repository: $GITHUB_REPOSITORY"
+            echo "- Branch: $GITHUB_REF_NAME"
+            echo "- Commit: $GITHUB_SHA"
+            echo "- Actor: $GITHUB_ACTOR"
+            echo "- Workflow: $GITHUB_WORKFLOW"
+            echo "- Run Id: $GITHUB_RUN_ID"
+            echo "- Runner: $RUNNER_OS"
+            echo "- Environment: Production"
+            echo ""
+            echo "AWS EC2 Deployment using Amazon ECR completed successfully."
+          } >> $GITHUB_STEP_SUMMARY
+ 

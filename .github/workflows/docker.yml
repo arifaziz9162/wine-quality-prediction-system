@@ -325,7 +325,7 @@ jobs:
             org.opencontainers.image.license=MIT
 
       - name: Build and Push Migrate Image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: deployment/docker/Dockerfile

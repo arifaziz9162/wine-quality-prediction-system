@@ -1,5 +1,5 @@
 # Use Airflow 3.3.1 with Python 3.11.
-FROM apache/airflow:3.3.1-python3.11
+FROM apache/airflow:3.3.2-python3.11
 
 # Copy project source code.
 COPY src /opt/wine_quality_prediction/src

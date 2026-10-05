@@ -89,8 +89,8 @@ jobs:
       - name: Verify Configuration Files
         run: |
           test -f config/config.yaml
-          test -f params.yaml
-          test -f schema.yaml
+          test -f config/params.yaml
+          test -f config/schema.yaml
 
       - name: Verify Serving Structure
         run: |

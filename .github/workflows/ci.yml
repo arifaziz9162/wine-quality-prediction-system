@@ -107,8 +107,8 @@ jobs:
         run: |
           test -f deployment/docker/Dockerfile
           test -d deployment/k8s/base
-          test -d deployment/monitoring/prometheus
-          test -d deployment/monitoring/grafana
+          test -d deployment/k8s/base/monitoring/prometheus
+          test -d deployment/k8s/base/monitoring/grafana
           test -f deployment/k8s/base/kustomization.yaml
 
       - name: Run Ruff (training package)
@@ -253,7 +253,7 @@ jobs:
       - name: Verify Deployment Structure
         run: |
           test -d deployment/k8s/base
-          test -d deployment/monitoring
+          test -d deployment/k8s/base/monitoring
 
           test -f deployment/docker/Dockerfile
           test -f deployment/k8s/base/kustomization.yaml

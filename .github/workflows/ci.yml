@@ -71,7 +71,6 @@ jobs:
           test -d deployment
           test -d config
           test -d notebooks
-          test -d reports
           test -d migrations
           test -d airflow
 
@@ -107,7 +106,7 @@ jobs:
 
       - name: Verify Deployment Structure
         run: |
-          test -f deployment/docker/Dockerfile.migrate
+          test -f deployment/docker/Dockerfile
           test -d deployment/k8s/base
           test -d deployment/monitoring/prometheus
           test -d deployment/monitoring/grafana
@@ -257,7 +256,7 @@ jobs:
           test -d deployment/k8s/base
           test -d deployment/monitoring
 
-          test -f deployment/docker/Dockerfile.migrate
+          test -f deployment/docker/Dockerfile
           test -f deployment/k8s/base/kustomization.yaml
 
       - name: Verify Airflow Structure
@@ -469,4 +468,3 @@ jobs:
             echo ""
             echo "Continuous Integration workflow completed successfully."
           } >> $GITHUB_STEP_SUMMARY
- 

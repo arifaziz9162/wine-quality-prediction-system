@@ -53,7 +53,7 @@ jobs:
           test -d deployment
           test -d migrations
 
-          test -f deployment/docker/Dockerfile.migrate
+          test -f deployment/docker/Dockerfile
           test -f docker-compose.prod.yml
           test -f alembic.ini
 
@@ -241,4 +241,3 @@ jobs:
             echo ""
             echo "AWS EC2 Deployment using Amazon ECR completed successfully."
           } >> $GITHUB_STEP_SUMMARY
- 

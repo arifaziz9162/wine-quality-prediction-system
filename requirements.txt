@@ -18,6 +18,10 @@ joblib==1.4.2
 PyYAML==6.0.2
 python-box==7.2.0
 
+# Database
+SQLAlchemy==2.0.35
+psycopg2-binary==2.9.9
+
 # Packaging
 setuptools==83.0.0
 wheel==0.46.2

@@ -5,7 +5,7 @@ bentoml==1.4.39
 python-dotenv==1.2.2
 
 # Data Processing
-pandas==2.2.2
+pandas==3.0.6
 numpy==1.26.4
 
 # Machine Learning Runtime

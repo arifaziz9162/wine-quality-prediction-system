@@ -50,6 +50,15 @@ jobs:
           python -m pip install dvc==3.51.2 pathspec==0.12.1
           python -m pip install -e . --no-deps
 
+      - name: Verify DVC Dependencies
+        run: |
+          which dvc
+          head -1 "$(which dvc)"
+          python -m pip show dvc pathspec
+          python -c "import dvc, pathspec; print('DVC:', dvc.__version__); print('pathspec:', pathspec.__version__)"
+          python -c "from pathspec.patterns.gitwildmatch import _DIR_MARK; print('_DIR_MARK:', _DIR_MARK)"
+          python -m pip check
+
       - name: Configure DVC
         run: |
           dvc remote modify dagshub --local auth basic

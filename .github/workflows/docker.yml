@@ -112,7 +112,17 @@ jobs:
           dvc remote modify dagshub --local user "TechArif"
           dvc remote modify dagshub --local password "$DAGSHUB_TOKEN"
 
-          dvc pull artifacts/model_registry/status.json
+          echo "===== REMOTE ====="
+          dvc remote get-url dagshub
+
+          echo "===== LOCKFILE ====="
+          grep -A5 -B2 "artifacts/model_registry/status.json" dvc.lock
+
+          echo "===== DVC STATUS ====="
+          dvc status -c
+
+          echo "===== DVC PULL ====="
+          dvc pull -v artifacts/model_registry/status.json
 
       - name: Package Production Model into BentoML Store
         id: package

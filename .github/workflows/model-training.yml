@@ -165,7 +165,8 @@ jobs:
 
       - name: Pull DVC Data
         run: |
-          dvc pull
+          dvc pull artifacts/data_ingestion/WineQT.csv
+          dvc pull artifacts/model_registry/status.json
 
       - name: Verify Dataset
         run: |

@@ -134,7 +134,6 @@ jobs:
       - name: Install Project Dependencies
         run: |
             python -m pip install --upgrade pip
-            python -m pip install -r requirements.txt
             python -m pip install -r requirements-dev.txt
             python -m pip install -e .
 
@@ -205,10 +204,9 @@ jobs:
           test -f artifacts/model_registry/status.json
 
           # model_packaging (stage_07) is intentionally NOT run here. It
-          # needs bentoml, which cannot be installed alongside dagshub (see
-          # requirements.txt vs serving/requirements.txt). It runs in its own
-          # job/venv in .github/workflows/docker.yml's package-model job,
-          # triggered separately whenever Production changes.
+          # needs bentoml, which cannot be installed alongside dagshub.
+          # It runs in its own job/venv in .github/workflows/docker.yml's
+          # package-model job, triggered separately whenever Production changes.
 
       - name: Display Evaluation Metrics
         run: |

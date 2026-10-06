@@ -210,6 +210,26 @@ jobs:
         run: |
           alembic upgrade head
 
+      - name: Test DagsHub Connectivity
+        env:
+          DAGSHUB_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
+        run: |
+          python - <<'PY'
+          import os
+          import httpx
+
+          token = os.environ["DAGSHUB_TOKEN"]
+
+          response = httpx.get(
+              "https://dagshub.com/api/v1/repos/TechArif/wine-quality-prediction-system",
+              headers={"Authorization": f"Bearer {token}"},
+              timeout=30.0,
+          )
+
+          print("DagsHub HTTP status:", response.status_code)
+          print("DagsHub response received successfully")
+          PY
+
       - name: Execute Training Pipeline
         env:
           DAGSHUB_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}

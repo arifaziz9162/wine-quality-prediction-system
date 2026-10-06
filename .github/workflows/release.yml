@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: release-${{ github.ref_name }}
@@ -16,6 +16,9 @@ concurrency:
 
 env:
   PYTHON_VERSION: "3.11"
+  DAGSHUB_USERNAME: ${{ secrets.DAGSHUB_USERNAME }}
+  DAGSHUB_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
+  DAGSHUB_USER_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
 
 jobs:
 
@@ -44,7 +47,18 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
+          python -m pip install dvc==3.51.2
           python -m pip install -e . --no-deps
+
+      - name: Configure DVC
+        run: |
+          dvc remote modify dagshub --local auth basic
+          dvc remote modify dagshub --local user "$DAGSHUB_USERNAME"
+          dvc remote modify dagshub --local password "$DAGSHUB_TOKEN"
+
+      - name: Pull DVC Artifacts
+        run: |
+          dvc pull
 
       - name: Display Environment Information
         run: |
@@ -83,10 +97,6 @@ jobs:
           echo "Release Tag: $GITHUB_REF_NAME"
           git describe --tags --always
 
-      - name: Pull DVC Artifacts
-        run: |
-          dvc pull
-
       - name: Verify Release Artifacts
         run: |
           test -d artifacts
@@ -101,7 +111,6 @@ jobs:
         run: |
           tar -czf wine-quality-artifacts.tar.gz \
             artifacts \
-            reports \
             dvc.yaml \
             dvc.lock
 

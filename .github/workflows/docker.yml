@@ -107,6 +107,11 @@ jobs:
           DAGSHUB_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
         run: |
           python -m pip install "dvc==3.51.2" "pathspec==0.12.1"
+
+          dvc remote modify dagshub --local auth basic
+          dvc remote modify dagshub --local user "TechArif"
+          dvc remote modify dagshub --local password "$DAGSHUB_TOKEN"
+
           dvc pull artifacts/model_registry/status.json
 
       - name: Package Production Model into BentoML Store
@@ -162,6 +167,11 @@ jobs:
           DAGSHUB_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
         run: |
           python -m pip install "dvc==3.51.2" "pathspec==0.12.1"
+
+          dvc remote modify dagshub --local auth basic
+          dvc remote modify dagshub --local user "TechArif"
+          dvc remote modify dagshub --local password "$DAGSHUB_TOKEN"
+
           dvc pull artifacts/model_registry/status.json
 
       - name: Re-package Model into Local BentoML Store

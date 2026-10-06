@@ -250,3 +250,4 @@ marimo/_lsp/
 __marimo__/
 deployment/k8s/base/secret.env
 artifacts/
+trivy-report/

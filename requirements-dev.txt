@@ -30,7 +30,7 @@ ensure==1.0.4
 # Database
 alembic==1.18.5
 SQLAlchemy==2.0.35
-psycopg2-binary==2.9.9
+psycopg2-binary==2.9.13
 
 # Testing
 pytest==8.3.3

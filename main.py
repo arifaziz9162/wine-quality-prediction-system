@@ -17,9 +17,6 @@ from wine_quality_prediction.pipeline.stage_05_model_evaluation import (
 from wine_quality_prediction.pipeline.stage_06_model_registry import (
     ModelRegistryPipeline,
 )
-from wine_quality_prediction.pipeline.stage_07_model_packaging import (
-    ModelPackagingPipeline,
-)
 
 logger = get_logger("main", "main.log")
 
@@ -50,10 +47,6 @@ if __name__ == "__main__":
         logger.info("Model Registry Stage Started")
         ModelRegistryPipeline().run()
         logger.info("Model Registry Stage Completed\n")
-
-        logger.info("Model Packaging Stage Started")
-        ModelPackagingPipeline().run()
-        logger.info("Model Packaging Stage completed\n")
 
         logger.info("========== Pipeline completed ==========")
 

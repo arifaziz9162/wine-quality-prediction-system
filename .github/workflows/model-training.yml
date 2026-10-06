@@ -211,6 +211,8 @@ jobs:
           alembic upgrade head
 
       - name: Execute Training Pipeline
+        env:
+          DAGSHUB_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
         run: |
           python main.py
 

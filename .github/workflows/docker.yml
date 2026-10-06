@@ -113,7 +113,7 @@ jobs:
           dvc remote modify dagshub --local password "$DAGSHUB_TOKEN"
 
           echo "===== REMOTE ====="
-          dvc remote get-url dagshub
+          dvc remote list
 
           echo "===== LOCKFILE ====="
           grep -A5 -B2 "artifacts/model_registry/status.json" dvc.lock

@@ -206,6 +206,10 @@ jobs:
           print(df.isnull().sum())
           EOF
 
+      - name: Run Database Migrations
+        run: |
+          alembic upgrade head
+
       - name: Execute Training Pipeline
         run: |
           python main.py

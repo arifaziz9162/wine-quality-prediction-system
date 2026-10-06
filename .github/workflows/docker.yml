@@ -192,7 +192,7 @@ jobs:
           # dirs), so each runner re-packages from the same Production MLflow
           # version. model_packaging.py's find_existing() check means this is
           # cheap: it reuses the already-known model rather than duplicating it.
-          dvc repro model_packaging
+          python -m src.wine_quality_prediction.pipeline.stage_07_model_packaging
 
       - name: Build Bento
         run: |

@@ -9,7 +9,7 @@ pathspec==0.12.1
 # Runtime / Training Dependencies
 python-dotenv==1.2.2
 pandas==2.2.2
-numpy==1.26.4
+numpy==2.4.6
 scikit-learn==1.5.1
 xgboost==2.1.1
 lightgbm==4.6.0

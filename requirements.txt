@@ -1,8 +1,5 @@
-# MLOps Tools
-dagshub==0.3.32
-mlflow==2.15.1
-dvc==3.51.2
-pathspec==0.12.1
+# Serving
+bentoml==1.4.39
 
 # Environment
 python-dotenv==1.0.1
@@ -11,32 +8,19 @@ python-dotenv==1.0.1
 pandas==2.2.2
 numpy==1.26.4
 
-# Machine Learning
+# Machine Learning Runtime
 scikit-learn==1.5.1
 xgboost==2.1.1
 lightgbm==4.6.0
-optuna==4.9.0
 joblib==1.4.2
 
-# Visualization
-matplotlib==3.9.2
-seaborn==0.13.2
-
 # Utilities
-python-box==7.2.0
 PyYAML==6.0.2
-tqdm==4.66.5
-ensure==1.0.4
-kaggle==2.2.4
-
-# Database
-alembic==1.18.5
-SQLAlchemy==2.0.35
-psycopg2-binary==2.9.9
+python-box==7.2.0
 
 # Packaging
-setuptools==75.1.0
-wheel==0.44.0
+setuptools==78.1.1
+wheel==0.46.2
 
 # Local package
 -e .

@@ -1,5 +1,25 @@
-# Production dependencies first
--r requirements.txt
+# Development dependencies
+
+# MLOps Tools
+dagshub==0.3.32
+mlflow==2.15.1
+dvc==3.51.2
+pathspec==0.12.1
+
+# Model Training
+optuna==4.9.0
+kaggle==2.2.4
+
+# Data & Visualization
+matplotlib==3.9.2
+seaborn==0.13.2
+tqdm==4.66.5
+ensure==1.0.4
+
+# Database
+alembic==1.18.5
+SQLAlchemy==2.0.35
+psycopg2-binary==2.9.9
 
 # Testing
 pytest==8.3.3
@@ -9,6 +29,6 @@ pytest-cov==5.0.0
 black==24.8.0
 ruff==0.12.1
 
-# Jupyter Support
+# Jupyter
 ipykernel==6.29.5
 jupyter==1.1.1

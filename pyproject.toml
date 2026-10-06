@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=82.0.1", "wheel"]
+requires = ["setuptools==78.1.1", "wheel==0.46.2"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -9,26 +9,7 @@ description = "End-to-end ML project for wine quality prediction"
 readme = "README.md"
 requires-python = ">=3.11"
 
-dependencies = [
-  "pandas",
-  "numpy",
-  "python-dotenv",
-  "kaggle",
-  "scikit-learn",
-  "mlflow",
-  "dvc",
-  "dagshub",
-  "xgboost",
-  "lightgbm",
-  "optuna",
-  "alembic",
-  "sqlalchemy",
-  "psycopg2-binary",
-  "PyYAML",
-  "python-box",
-  "ensure",
-  "joblib"
-]
+dependencies = []
 
 authors = [
     { name = "Md Arif Aziz", email = "arifaziz0125@gmail.com" }

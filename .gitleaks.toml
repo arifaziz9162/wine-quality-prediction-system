@@ -1,0 +1,5 @@
+[allowlist]
+description = "Ignore Kubernetes Prometheus manifest false positive"
+paths = [
+    '''deployment/k8s/base/prometheus\.yaml'''
+]

@@ -163,6 +163,20 @@ jobs:
         run: |
           optuna --version
 
+      - name: Configure DVC Remote
+        env:
+          DAGSHUB_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
+        run: |
+          dvc remote modify dagshub --local auth basic
+          dvc remote modify dagshub --local user "TechArif"
+          dvc remote modify dagshub --local password "$DAGSHUB_TOKEN"
+
+          echo "===== DVC REMOTE ====="
+          dvc remote list
+
+          echo "===== DVC STATUS ====="
+          dvc status -c
+
       - name: Pull DVC Data
         run: |
           dvc pull artifacts/data_ingestion/WineQT.csv

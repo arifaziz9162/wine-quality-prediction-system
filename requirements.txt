@@ -31,4 +31,3 @@ setuptools==83.0.0
 wheel==0.46.2
 
 # Local package
--e .

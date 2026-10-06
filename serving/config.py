@@ -21,7 +21,7 @@ class Settings:
     MAX_CONCURRENCY: int = int(os.getenv("MAX_CONCURRENCY", 32))
 
     # Prediction history (PostgreSQL)
-    DB_SAVE_ENABLED: bool = os.getenv("DB_SAVE_ENABLED", "true").lower()
+    DB_SAVE_ENABLED: bool = (os.getenv("DB_SAVE_ENABLED", "true").lower() == "true")
     DB_SAVE_WORKERS: int = int(os.getenv("DB_SAVE_WORKERS", 2))
     PREDICTIONS_MAX_LIMIT: int = 500
 

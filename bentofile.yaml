@@ -18,7 +18,7 @@ envs:
     value: "/home/bentoml/bento/src/src"
 
 python:
-  requirements_txt: "./serving/requirements.txt"
+  requirements_txt: "./requirements.txt"
 
 docker:
   distro: debian

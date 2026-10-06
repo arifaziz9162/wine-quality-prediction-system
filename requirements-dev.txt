@@ -17,7 +17,7 @@ tqdm==4.66.5
 ensure==1.0.4
 
 # Database
-alembic==1.18.5
+alembic==1.20.0
 SQLAlchemy==2.0.35
 psycopg2-binary==2.9.9
 

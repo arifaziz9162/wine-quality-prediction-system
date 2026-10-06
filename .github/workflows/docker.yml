@@ -129,7 +129,7 @@ jobs:
         env:
           DAGSHUB_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
         run: |
-          dvc repro model_packaging
+          python -m src.wine_quality_prediction.pipeline.stage_07_model_packaging
           tag=$(python -c "import json; print(json.load(open('artifacts/model_packaging/info.json'))['bento_model'])")
           echo "bento-tag=$tag" >> "$GITHUB_OUTPUT"
           echo "Packaged: $tag"

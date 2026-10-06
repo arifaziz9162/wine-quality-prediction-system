@@ -27,7 +27,7 @@ pytest-cov==5.0.0
 
 # Code Quality
 black==24.8.0
-ruff==0.12.1
+ruff==0.16.10
 
 # Jupyter
 ipykernel==6.29.5

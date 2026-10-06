@@ -286,8 +286,8 @@ stages:
       size: 1778
     - path: src/wine_quality_prediction/components/model_registry.py
       hash: md5
-      md5: a3d5fd4bb08551d65120a62b6a093989
-      size: 9762
+      md5: be39f03b472e53473ddfc9fcd97f9db4
+      size: 9746
     - path: src/wine_quality_prediction/config/configuration.py
       hash: md5
       md5: 63748c23f4edf67b4b9c958cde4e2ad2
@@ -307,14 +307,14 @@ stages:
     outs:
     - path: artifacts/model_registry/status.json
       hash: md5
-      md5: a8d18dbb9fd57d9d2774e8ffdfbf2a3b
+      md5: decdefbad7401445c193bdb39faa4b27
       size: 93
   model_packaging:
     cmd: python -m src.wine_quality_prediction.pipeline.stage_07_model_packaging
     deps:
     - path: artifacts/model_registry/status.json
       hash: md5
-      md5: a8d18dbb9fd57d9d2774e8ffdfbf2a3b
+      md5: decdefbad7401445c193bdb39faa4b27
       size: 93
     - path: config/config.yaml
       hash: md5
@@ -322,8 +322,8 @@ stages:
       size: 1778
     - path: src/wine_quality_prediction/components/model_packaging.py
       hash: md5
-      md5: 7c8590257873e86b05d9a66d65acea6c
-      size: 6992
+      md5: 4d4a1bb947b7679daf94599a2faaf029
+      size: 6962
     - path: src/wine_quality_prediction/config/configuration.py
       hash: md5
       md5: 63748c23f4edf67b4b9c958cde4e2ad2
@@ -334,8 +334,8 @@ stages:
       size: 1264
     - path: src/wine_quality_prediction/pipeline/stage_07_model_packaging.py
       hash: md5
-      md5: 5b857edb5a8d0fb1cbb7eeff4a0245bb
-      size: 1133
+      md5: 5076f748b6ab82a2e47ffd0f40930a39
+      size: 1033
     - path: src/wine_quality_prediction/utils/common.py
       hash: md5
       md5: fc42893b00029b34abe99c74e3787c96
@@ -343,9 +343,9 @@ stages:
     outs:
     - path: artifacts/model_packaging/info.json
       hash: md5
-      md5: d8e4cb4ad37a3e0d0cd29a6972ba42cb
+      md5: 3e697c12ded3ffab36daf6abff4804bf
       size: 201
     - path: artifacts/model_packaging/status.json
       hash: md5
-      md5: e6b0ee073d6a34d8b574843e6abbdeb9
+      md5: 94dd170c7dad5d392e62fe58858636a7
       size: 94

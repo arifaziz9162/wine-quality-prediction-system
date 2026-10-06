@@ -1,10 +1,6 @@
-from .data_ingestion import DataIngestion
-from .data_transformation import DataTransformation
-from .data_validation import DataValidation
-from .model_evaluation import ModelEvaluation
-from .model_packaging import ModelPackaging
-from .model_registry import ModelRegistry
-from .model_trainer import ModelTrainer
+"""Component package exports with lazy imports."""
+
+from importlib import import_module
 
 __all__ = [
     "DataIngestion",
@@ -15,3 +11,25 @@ __all__ = [
     "ModelRegistry",
     "ModelPackaging",
 ]
+
+_COMPONENTS = {
+    "DataIngestion": ".data_ingestion",
+    "DataValidation": ".data_validation",
+    "DataTransformation": ".data_transformation",
+    "ModelTrainer": ".model_trainer",
+    "ModelEvaluation": ".model_evaluation",
+    "ModelRegistry": ".model_registry",
+    "ModelPackaging": ".model_packaging",
+}
+
+
+def __getattr__(name: str):
+    """Load a component only when it is accessed."""
+    if name not in _COMPONENTS:
+        raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+    module = import_module(_COMPONENTS[name], package=__name__)
+    component = getattr(module, name)
+
+    globals()[name] = component
+    return component

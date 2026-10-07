@@ -118,7 +118,6 @@ jobs:
             echo "Creating production .env on EC2..."
 
             SHORT_SHA=$(echo "${{ github.event.workflow_run.head_sha || github.sha }}" | cut -c1-7)
-
             cat > .env << 'ENV_FILE'
             DB_USER=${{ secrets.DB_USER }}
             DB_PASSWORD=${{ secrets.DB_PASSWORD }}
@@ -126,8 +125,9 @@ jobs:
             AWS_ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID }}
             AWS_REGION=${{ secrets.AWS_REGION }}
             GRAFANA_ADMIN_PASSWORD=${{ secrets.GRAFANA_ADMIN_PASSWORD }}
-            IMAGE_TAG=sha-${SHORT_SHA}
             ENV_FILE
+
+            echo "IMAGE_TAG=sha-${SHORT_SHA}" >> .env
 
             chmod 600 .env
 
@@ -170,8 +170,6 @@ jobs:
 
             echo "Removing Unused Docker Images..."
             docker image prune -af
-
-            EOF
 
       - name: Wait For Services
         run: |

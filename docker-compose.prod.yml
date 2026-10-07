@@ -32,7 +32,7 @@ services:
 
 
   migrate:
-    image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/wine-quality-migrate:v1.0.0
+    image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/wine-quality-migrate:${IMAGE_TAG}
 
     container_name: wine-quality-migrate
 
@@ -54,7 +54,7 @@ services:
 
 
   bento:
-    image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/wine-quality-service:v1.0.0
+    image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/wine-quality-service:${IMAGE_TAG}
 
     container_name: wine-quality-service
 

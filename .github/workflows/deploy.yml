@@ -113,6 +113,9 @@ jobs:
 
           cd ~/wine-quality-prediction-system
 
+          echo "Updating deployment files..."
+          git pull --ff-only origin main
+
           echo "Creating production .env on EC2..."
 
           SHORT_SHA=$(echo "${{ github.event.workflow_run.head_sha || github.sha }}" | cut -c1-7)

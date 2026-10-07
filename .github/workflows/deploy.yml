@@ -113,7 +113,23 @@ jobs:
 
           cd ~/wine-quality-prediction-system
 
+          echo "Creating production .env on EC2..."
+
+          cat > .env << 'ENV_FILE'
+          DB_USER=${{ secrets.DB_USER }}
+          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+          DB_NAME=${{ secrets.DB_NAME }}
+          AWS_ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID }}
+          AWS_REGION=${{ secrets.AWS_REGION }}
+          GRAFANA_ADMIN_PASSWORD=${{ secrets.GRAFANA_ADMIN_PASSWORD }}
+          ENV_FILE
+
+          chmod 600 .env
+
+          echo "Production .env created successfully."
+
           echo "Logging into AMAZON ECR..."
+
           aws ecr get-login-password \
           --region ${{ secrets.AWS_REGION }} | docker login \
           --username AWS \

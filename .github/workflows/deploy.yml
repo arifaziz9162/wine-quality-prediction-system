@@ -103,76 +103,75 @@ jobs:
             "echo 'Connected Successfully.'"
 
       - name: Deploy Application on EC2
-        run: |
-          ssh \
-            -i ~/.ssh/id_rsa \
-            -o IdentitiesOnly=yes \
-            "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" << EOF
-          set -e
-          echo "Connected to EC2"
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd ~/wine-quality-prediction-system
 
-          cd ~/wine-quality-prediction-system
+            echo "Updating deployment files..."
+            git fetch origin refs/heads/main:refs/remotes/origin/main
+            git reset --hard origin/main
 
-          echo "Updating deployment files..."
-          git pull --ff-only origin main
+            echo "Creating production .env on EC2..."
 
-          echo "Creating production .env on EC2..."
+            SHORT_SHA=$(echo "${{ github.event.workflow_run.head_sha || github.sha }}" | cut -c1-7)
 
-          SHORT_SHA=$(echo "${{ github.event.workflow_run.head_sha || github.sha }}" | cut -c1-7)
+            cat > .env << 'ENV_FILE'
+            DB_USER=${{ secrets.DB_USER }}
+            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+            DB_NAME=${{ secrets.DB_NAME }}
+            AWS_ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID }}
+            AWS_REGION=${{ secrets.AWS_REGION }}
+            GRAFANA_ADMIN_PASSWORD=${{ secrets.GRAFANA_ADMIN_PASSWORD }}
+            IMAGE_TAG=sha-${SHORT_SHA}
+            ENV_FILE
 
-          cat > .env << 'ENV_FILE'
-          DB_USER=${{ secrets.DB_USER }}
-          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-          DB_NAME=${{ secrets.DB_NAME }}
-          AWS_ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID }}
-          AWS_REGION=${{ secrets.AWS_REGION }}
-          GRAFANA_ADMIN_PASSWORD=${{ secrets.GRAFANA_ADMIN_PASSWORD }}
-          IMAGE_TAG=sha-${SHORT_SHA}
-          ENV_FILE
+            chmod 600 .env
 
-          chmod 600 .env
+            echo "Production .env created successfully."
 
-          echo "Production .env created successfully."
+            echo "Logging into AMAZON ECR..."
 
-          echo "Logging into AMAZON ECR..."
+            aws ecr get-login-password \
+            --region ${{ secrets.AWS_REGION }} | docker login \
+            --username AWS \
+            --password-stdin \
+            ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
 
-          aws ecr get-login-password \
-          --region ${{ secrets.AWS_REGION }} | docker login \
-          --username AWS \
-          --password-stdin \
-          ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+            echo "Pulling Latest Docker Images..."
+            docker compose -f docker-compose.prod.yml pull
 
-          echo "Pulling Latest Docker Images..."
-          docker compose -f docker-compose.prod.yml pull
+            echo "Stopping Existing Containers..."
+            docker compose -f docker-compose.prod.yml down
 
-          echo "Stopping Existing Containers..."
-          docker compose -f docker-compose.prod.yml down
+            echo "Starting PostgreSQL container..."
+            docker compose -f docker-compose.prod.yml up -d postgres
 
-          echo "Starting PostgreSQL container..."
-          docker compose -f docker-compose.prod.yml up -d postgres
+            echo "Waiting for PostgreSQL..."
+            sleep 10
 
-          echo "Waiting for PostgreSQL..."
-          sleep 10
+            echo "Checking PostgreSQL..."
+            docker compose -f docker-compose.prod.yml ps postgres
 
-          echo "Checking PostgreSQL..."
-          docker compose -f docker-compose.prod.yml ps postgres
+            echo "Running Alembic migrations..."
+            docker compose -f docker-compose.prod.yml run --rm migrate
 
-          echo "Running Alembic migrations..."
-          docker compose -f docker-compose.prod.yml run --rm migrate
+            echo "Starting BentoML service..."
+            docker compose -f docker-compose.prod.yml up -d bento
 
-          echo "Starting BentoML service..."
-          docker compose -f docker-compose.prod.yml up -d bento
+            echo "Starting monitoring stack..."
+            docker compose -f docker-compose.prod.yml up -d prometheus grafana
 
-          echo "Starting monitoring stack..."
-          docker compose -f docker-compose.prod.yml up -d prometheus grafana
+            echo "Running Containers..."
+            docker compose -f docker-compose.prod.yml ps
 
-          echo "Running Containers..."
-          docker compose -f docker-compose.prod.yml ps
+            echo "Removing Unused Docker Images..."
+            docker image prune -af
 
-          echo "Removing Unused Docker Images..."
-          docker image prune -af
-
-          EOF
+            EOF
 
       - name: Wait For Services
         run: |

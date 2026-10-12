@@ -1,7 +1,7 @@
 # Development dependencies
 
 # MLOps Tools
-dagshub==0.3.32
+dagshub==0.7.2
 mlflow==3.16.1
 dvc==3.51.2
 pathspec==0.12.1

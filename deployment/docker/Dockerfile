@@ -1,6 +1,6 @@
 # This image is only used to run database migrations.
 # Migration tools are kept separate from the application serving container.
-FROM python:3.11-slim
+FROM python:3.12-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
